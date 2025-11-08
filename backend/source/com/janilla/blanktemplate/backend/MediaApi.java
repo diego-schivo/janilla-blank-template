@@ -1,0 +1,58 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024-2025 Diego Schivo
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.janilla.blanktemplate.backend;
+
+import java.nio.file.Path;
+import java.util.Properties;
+import java.util.function.Predicate;
+
+import com.janilla.cms.CollectionApi;
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpResponse;
+import com.janilla.persistence.Persistence;
+import com.janilla.web.Handle;
+
+@Handle(path = "/api/media")
+public class MediaApi extends CollectionApi<Long, Media> {
+
+	protected final Properties configuration;
+
+	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration) {
+		super(Media.class, drafts, persistence);
+		this.configuration = configuration;
+	}
+
+	@Handle(method = "GET", path = "file/(.+)")
+	public void file(Path path, HttpResponse response) {
+		Path d;
+		{
+			var x = configuration.getProperty("blank-template.upload.directory");
+			if (x.startsWith("~"))
+				x = System.getProperty("user.home") + x.substring(1);
+			d = Path.of(x);
+		}
+		var f = d.resolve(path.getFileName());
+		CmsFileHandlerFactory.handle(f, response);
+	}
+}
