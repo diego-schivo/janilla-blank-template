@@ -26,11 +26,12 @@ package com.janilla.blanktemplate.backend;
 import java.time.Instant;
 
 import com.janilla.cms.Document;
+import com.janilla.cms.DocumentStatus;
 import com.janilla.persistence.Store;
 
 @Store
 public record Media(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
-		Document.Status documentStatus, Instant publishedAt) implements Document<Long> {
+		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
 
 	public String uri() {
 		return file != null
