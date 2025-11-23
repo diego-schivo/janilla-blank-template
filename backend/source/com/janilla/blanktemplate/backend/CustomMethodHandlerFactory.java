@@ -24,6 +24,7 @@
 package com.janilla.blanktemplate.backend;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Properties;
 import java.util.Set;
@@ -32,10 +33,14 @@ import java.util.function.Function;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
-import com.janilla.json.DollarTypeResolver;
-import com.janilla.json.TypeResolver;
-import com.janilla.reflect.ClassAndMethod;
+import com.janilla.ioc.DiFactory;
+import com.janilla.java.Converter;
+import com.janilla.java.DollarTypeResolver;
+import com.janilla.java.NullTypeResolver;
+import com.janilla.java.TypeResolver;
+import com.janilla.web.Invocable;
 import com.janilla.web.HandleException;
+import com.janilla.web.Invocation;
 import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
@@ -48,14 +53,14 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	protected final Properties configuration;
 
-	protected final TypeResolver typeResolver;
+	protected final DiFactory diFactory;
 
-	public CustomMethodHandlerFactory(Collection<ClassAndMethod> methods, Function<Class<?>, Object> targetResolver,
+	public CustomMethodHandlerFactory(Collection<Invocable> methods, Function<Class<?>, Object> targetResolver,
 			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
-			HttpHandlerFactory rootFactory, Properties configuration, TypeResolver typeResolver) {
+			HttpHandlerFactory rootFactory, Properties configuration, DiFactory diFactory) {
 		super(methods, targetResolver, invocationComparator, renderableFactory, rootFactory);
 		this.configuration = configuration;
-		this.typeResolver = typeResolver;
+		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
 	}
@@ -92,9 +97,12 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 	}
 
 	@Override
-	protected TypeResolver resolver(Class<? extends TypeResolver> class1) {
-		if (class1 == DollarTypeResolver.class)
-			return typeResolver;
-		return super.resolver(class1);
+	protected Converter converter(Class<? extends TypeResolver> type) {
+		return diFactory
+				.create(Converter.class,
+						type != DollarTypeResolver.class
+								? Collections.singletonMap("typeResolver",
+										type != null && type != NullTypeResolver.class ? diFactory.create(type) : null)
+								: null);
 	}
 }

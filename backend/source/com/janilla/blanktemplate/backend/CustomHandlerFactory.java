@@ -31,14 +31,14 @@ import java.util.stream.IntStream;
 
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.ioc.DiFactory;
-import com.janilla.reflect.ClassAndMethod;
 import com.janilla.web.ApplicationHandlerFactory;
+import com.janilla.web.Invocable;
 import com.janilla.web.FileHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
 public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
-	public CustomHandlerFactory(DiFactory diFactory, Collection<ClassAndMethod> methods,
+	public CustomHandlerFactory(DiFactory diFactory, Collection<Invocable> methods,
 			RenderableFactory renderableFactory, Collection<Path> files) {
 		super(diFactory, methods, renderableFactory, files);
 	}

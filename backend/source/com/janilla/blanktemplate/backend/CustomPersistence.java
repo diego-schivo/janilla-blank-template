@@ -26,7 +26,7 @@ package com.janilla.blanktemplate.backend;
 import java.util.Collection;
 
 import com.janilla.cms.CmsPersistence;
-import com.janilla.json.TypeResolver;
+import com.janilla.java.TypeResolver;
 import com.janilla.persistence.Entity;
 import com.janilla.sqlite.SqliteDatabase;
 
