@@ -41,9 +41,7 @@ public class Cors {
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("blank-template.api.cors.origin");
-		var m = CustomMethodHandlerFactory.INSTANCE.get().resolveInvocables(request.getPath())
-				.flatMap(x -> x.methodHandles().keySet().stream()).map(x -> x.getAnnotation(Handle.class).method())
-				.toList();
+		var m = CustomMethodHandlerFactory.INSTANCE.get().handleMethods(request.getPath());
 		var h = configuration.getProperty("blank-template.api.cors.headers");
 
 		response.setStatus(204);

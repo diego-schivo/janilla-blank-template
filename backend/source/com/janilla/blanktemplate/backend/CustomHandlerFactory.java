@@ -23,30 +23,25 @@
  */
 package com.janilla.blanktemplate.backend;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.ioc.DiFactory;
 import com.janilla.web.ApplicationHandlerFactory;
-import com.janilla.web.Invocable;
-import com.janilla.web.FileHandlerFactory;
-import com.janilla.web.RenderableFactory;
+import com.janilla.web.DefaultFileHandlerFactory;
 
 public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
-	public CustomHandlerFactory(DiFactory diFactory, Collection<Invocable> methods,
-			RenderableFactory renderableFactory, Collection<Path> files) {
-		super(diFactory, methods, renderableFactory, files);
+	public CustomHandlerFactory(DiFactory diFactory) {
+		super(diFactory);
 	}
 
 	@Override
 	protected List<HttpHandlerFactory> buildFactories() {
 		var ff = new ArrayList<>(super.buildFactories());
-		var i = IntStream.range(0, ff.size()).filter(x -> ff.get(x) instanceof FileHandlerFactory).findFirst()
+		var i = IntStream.range(0, ff.size()).filter(x -> ff.get(x) instanceof DefaultFileHandlerFactory).findFirst()
 				.getAsInt();
 		ff.add(i, diFactory.create(CmsFileHandlerFactory.class));
 		return ff;

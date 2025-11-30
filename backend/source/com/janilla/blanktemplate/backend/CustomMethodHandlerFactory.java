@@ -23,9 +23,9 @@
  */
 package com.janilla.blanktemplate.backend;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,13 +38,14 @@ import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.NullTypeResolver;
 import com.janilla.java.TypeResolver;
-import com.janilla.web.Invocable;
+import com.janilla.web.Handle;
 import com.janilla.web.HandleException;
+import com.janilla.web.Invocable;
 import com.janilla.web.Invocation;
-import com.janilla.web.MethodHandlerFactory;
+import com.janilla.web.InvocationHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
-public class CustomMethodHandlerFactory extends MethodHandlerFactory {
+public class CustomMethodHandlerFactory extends InvocationHandlerFactory {
 
 	public static final AtomicReference<CustomMethodHandlerFactory> INSTANCE = new AtomicReference<>();
 
@@ -55,10 +56,10 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	protected final DiFactory diFactory;
 
-	public CustomMethodHandlerFactory(Collection<Invocable> methods, Function<Class<?>, Object> targetResolver,
+	public CustomMethodHandlerFactory(List<Invocable> invocables, Function<Class<?>, Object> instanceResolver,
 			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
 			HttpHandlerFactory rootFactory, Properties configuration, DiFactory diFactory) {
-		super(methods, targetResolver, invocationComparator, renderableFactory, rootFactory);
+		super(invocables, instanceResolver, invocationComparator, renderableFactory, rootFactory);
 		this.configuration = configuration;
 		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
@@ -104,5 +105,10 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 								? Collections.singletonMap("typeResolver",
 										type != null && type != NullTypeResolver.class ? diFactory.create(type) : null)
 								: null);
+	}
+
+	protected List<String> handleMethods(String path) {
+		return invocationGroups(path).flatMap(x -> x.methods().stream())
+				.map(x -> x.getAnnotation(Handle.class).method()).toList();
 	}
 }
