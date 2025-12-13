@@ -38,7 +38,6 @@ import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.NullTypeResolver;
 import com.janilla.java.TypeResolver;
-import com.janilla.web.Handle;
 import com.janilla.web.HandleException;
 import com.janilla.web.Invocable;
 import com.janilla.web.Invocation;
@@ -108,7 +107,6 @@ public class CustomMethodHandlerFactory extends InvocationHandlerFactory {
 	}
 
 	protected List<String> handleMethods(String path) {
-		return invocationGroups(path).flatMap(x -> x.methods().stream())
-				.map(x -> x.getAnnotation(Handle.class).method()).toList();
+		return invocationGroups(path).flatMap(x -> x.methods().keySet().stream()).toList();
 	}
 }
