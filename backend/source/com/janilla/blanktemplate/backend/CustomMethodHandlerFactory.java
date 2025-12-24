@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,7 +73,7 @@ public class CustomMethodHandlerFactory extends InvocationHandlerFactory {
 			if (rq.getMethod().equals("OPTIONS") || USER_POST.contains(rq.getPath()))
 				;
 			else
-				((CustomHttpExchange) exchange).requireSessionEmail();
+				((BackendExchange) exchange).requireSessionEmail();
 		}
 
 		if (Boolean.parseBoolean(configuration.getProperty("blank-template.live-demo"))) {

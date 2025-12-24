@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,25 +36,26 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.blanktemplate.backend.BlankTemplateBackend;
-import com.janilla.blanktemplate.frontend.BlankTemplateFrontend;
+import com.janilla.blanktemplate.backend.BackendExchange;
+import com.janilla.blanktemplate.backend.BlankBackend;
+import com.janilla.blanktemplate.frontend.BlankFrontend;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
 import com.janilla.net.Net;
 
-public class BlankTemplateFullstack {
+public class BlankFullstack {
 
-	public static final AtomicReference<BlankTemplateFullstack> INSTANCE = new AtomicReference<>();
+	public static final AtomicReference<BlankFullstack> INSTANCE = new AtomicReference<>();
 
 	public static void main(String[] args) {
 		try {
-			BlankTemplateFullstack a;
+			BlankFullstack a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(BlankTemplateFullstack.class.getPackageName()),
-						BlankTemplateFullstack.INSTANCE::get, "fullstack");
-				a = f.create(BlankTemplateFullstack.class,
+				var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName()),
+						BlankFullstack.INSTANCE::get, "fullstack");
+				a = f.create(BlankFullstack.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
 										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
@@ -64,7 +66,7 @@ public class BlankTemplateFullstack {
 			HttpServer s;
 			{
 				SSLContext c;
-				try (var x = Net.class.getResourceAsStream("testkeys")) {
+				try (var x = Net.class.getResourceAsStream("localhost")) {
 					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("blank-template.fullstack.server.port"));
@@ -77,17 +79,17 @@ public class BlankTemplateFullstack {
 		}
 	}
 
-	protected final BlankTemplateBackend backend;
+	protected final BlankBackend backend;
 
 	protected final Properties configuration;
 
 	protected final DiFactory diFactory;
 
-	protected final BlankTemplateFrontend frontend;
+	protected final BlankFrontend frontend;
 
 	protected final HttpHandler handler;
 
-	public BlankTemplateFullstack(DiFactory diFactory, Path configurationFile) {
+	public BlankFullstack(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
@@ -95,44 +97,43 @@ public class BlankTemplateFullstack {
 
 		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
 			try {
-				return Path.of(BlankTemplateFullstack.class.getResource("configuration.properties").toURI());
+				return Path.of(BlankFullstack.class.getResource("configuration.properties").toURI());
 			} catch (URISyntaxException e) {
 				throw new RuntimeException(e);
 			}
 		});
-		backend = diFactory.create(BlankTemplateBackend.class,
-				Java.hashMap("diFactory",
-						new DiFactory(
-								Stream.of("fullstack", "backend")
-										.flatMap(x -> Java.getPackageClasses(BlankTemplateBackend.class.getPackageName()
-												.replace(".backend", "." + x)).stream())
-										.toList(),
-								BlankTemplateBackend.INSTANCE::get, "backend"),
-						"configurationFile", cf));
-		frontend = diFactory.create(BlankTemplateFrontend.class,
-				Java.hashMap("diFactory",
-						new DiFactory(
-								Stream.of("fullstack", "frontend")
-										.flatMap(x -> Java.getPackageClasses(BlankTemplateFrontend.class
-												.getPackageName().replace(".frontend", "." + x)).stream())
-										.toList(),
-								BlankTemplateFrontend.INSTANCE::get, "frontend"),
-						"configurationFile", cf));
+		backend = diFactory
+				.create(BlankBackend.class,
+						Java.hashMap("diFactory",
+								new DiFactory(
+										Stream.concat(
+												Stream.of("fullstack", "backend")
+														.map(x -> BlankBackend.class.getPackageName()
+																.replace(".backend", "." + x)),
+												Stream.of("com.janilla.web"))
+												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
+										BlankBackend.INSTANCE::get, "backend"),
+								"configurationFile", cf));
+		frontend = diFactory
+				.create(BlankFrontend.class,
+						Java.hashMap("diFactory",
+								new DiFactory(
+										Stream.concat(
+												Stream.of("fullstack", "frontend")
+														.map(x -> BlankFrontend.class.getPackageName()
+																.replace(".frontend", "." + x)),
+												Stream.of("com.janilla.web"))
+												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
+										BlankFrontend.INSTANCE::get, "frontend"),
+								"configurationFile", cf));
 
 		handler = x -> {
-//			IO.println("BlankTemplateFullstack, " + x.request().getPath());
-//			var h = switch (Objects.requireNonNullElse(x.exception(), x.request())) {
-//			case HttpRequest y -> y.getPath().startsWith("/api/") ? backend.handler() : frontend.handler();
-//			case Exception _ -> backend.handler();
-//			default -> null;
-//			};
-			var h = x instanceof com.janilla.blanktemplate.backend.CustomHttpExchange ? backend.handler()
-					: frontend.handler();
+			var h = x instanceof BackendExchange ? backend.handler() : frontend.handler();
 			return h.handle(x);
 		};
 	}
 
-	public BlankTemplateBackend backend() {
+	public BlankBackend backend() {
 		return backend;
 	}
 
@@ -144,7 +145,7 @@ public class BlankTemplateFullstack {
 		return diFactory;
 	}
 
-	public BlankTemplateFrontend frontend() {
+	public BlankFrontend frontend() {
 		return frontend;
 	}
 

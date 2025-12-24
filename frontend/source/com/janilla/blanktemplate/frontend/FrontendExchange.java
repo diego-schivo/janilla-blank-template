@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate.frontend;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -30,39 +31,42 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.janilla.http.BaseHttpExchange;
 import com.janilla.http.HttpCookie;
-import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
+import com.janilla.http.SimpleHttpExchange;
 import com.janilla.json.Jwt;
-import com.janilla.persistence.Persistence;
 import com.janilla.web.UnauthorizedException;
 
-public class CustomHttpExchange extends BaseHttpExchange {
+public class FrontendExchange extends SimpleHttpExchange {
 
-	private static final String SESSION_COOKIE = "janilla-blank-template-token";
+	private static final String SESSION_COOKIE = "blank-token";
 
 	protected final Properties configuration;
 
-	protected final Persistence persistence;
+	protected final DataFetching dataFetching;
 
 	protected final Map<String, Object> session = new HashMap<>();
 
-	public CustomHttpExchange(HttpRequest request, HttpResponse response, Properties configuration,
-			Persistence persistence) {
+	public FrontendExchange(HttpRequest request, HttpResponse response, Properties configuration,
+			DataFetching dataFetching) {
 		super(request, response);
 		this.configuration = configuration;
-		this.persistence = persistence;
+		this.dataFetching = dataFetching;
+	}
+
+	public HttpCookie tokenCookie() {
+		return request.getHeaderValues("cookie").map(HttpCookie::parse).filter(x -> x.name().equals(SESSION_COOKIE))
+				.findFirst().orElse(null);
 	}
 
 	public String sessionEmail() {
 		if (!session.containsKey("sessionEmail")) {
-			var t = request().getHeaderValues("cookie").map(HttpCookie::parse)
-					.filter(x -> x.name().equals(SESSION_COOKIE)).findFirst().orElse(null);
+			var t = tokenCookie();
 			Map<String, ?> p;
 			try {
-				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty("blank-template.jwt.key")) : null;
+				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty("ecommerce-template.jwt.key"))
+						: null;
 			} catch (IllegalArgumentException e) {
 				p = null;
 			}
@@ -71,13 +75,12 @@ public class CustomHttpExchange extends BaseHttpExchange {
 		return (String) session.get("sessionEmail");
 	}
 
-	public User sessionUser() {
+	public Object sessionUser() {
 		if (!session.containsKey("sessionUser")) {
-			var e = sessionEmail();
-			var c = persistence.crud(User.class);
-			session.put("sessionUser", e != null ? c.read(c.find("email", e)) : null);
+			var t = tokenCookie();
+			session.put("sessionUser", t != null ? dataFetching.sessionUser(t) : null);
 		}
-		return (User) session.get("sessionUser");
+		return session.get("sessionUser");
 	}
 
 	public void requireSessionEmail() {
@@ -91,11 +94,5 @@ public class CustomHttpExchange extends BaseHttpExchange {
 						.withExpires(value != null && !value.isEmpty() ? ZonedDateTime.now(ZoneOffset.UTC).plusHours(2)
 								: ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
 						.format());
-	}
-
-	@Override
-	public HttpExchange withException(Exception exception) {
-		this.exception = exception;
-		return this;
 	}
 }

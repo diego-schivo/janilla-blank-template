@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +36,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
@@ -50,21 +52,21 @@ import com.janilla.net.Net;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 import com.janilla.web.ApplicationHandlerFactory;
-import com.janilla.web.Invocable;
 import com.janilla.web.Handle;
+import com.janilla.web.Invocable;
 import com.janilla.web.NotFoundException;
-import com.janilla.web.RenderableFactory;
 
-public class BlankTemplateBackend {
+public class BlankBackend {
 
-	public static final AtomicReference<BlankTemplateBackend> INSTANCE = new AtomicReference<>();
+	public static final AtomicReference<BlankBackend> INSTANCE = new AtomicReference<>();
 
 	public static void main(String[] args) {
 		try {
-			BlankTemplateBackend a;
+			BlankBackend a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(BlankTemplateBackend.class.getPackageName()), INSTANCE::get);
-				a = f.create(BlankTemplateBackend.class,
+				var f = new DiFactory(Stream.of(BlankBackend.class.getPackageName(), "com.janilla.web")
+						.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), INSTANCE::get);
+				a = f.create(BlankBackend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
 										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
@@ -75,7 +77,7 @@ public class BlankTemplateBackend {
 			HttpServer s;
 			{
 				SSLContext c;
-				try (var x = Net.class.getResourceAsStream("testkeys")) {
+				try (var x = Net.class.getResourceAsStream("localhost")) {
 					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("blank-template.backend.server.port"));
@@ -90,17 +92,22 @@ public class BlankTemplateBackend {
 
 	protected final Properties configuration;
 
-	protected final Predicate<HttpExchange> drafts = x -> ((CustomHttpExchange) x).sessionUser() != null;
+	protected final Predicate<HttpExchange> drafts = x -> {
+		var u = x instanceof BackendExchange y ? y.sessionUser() : null;
+		return u != null;
+	};
 
 	protected final DiFactory diFactory;
 
 	protected final HttpHandler handler;
 
+	protected final List<Invocable> invocables;
+
 	protected final Persistence persistence;
 
 	protected final TypeResolver typeResolver;
 
-	public BlankTemplateBackend(DiFactory diFactory, Path configurationFile) {
+	public BlankBackend(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
@@ -115,12 +122,13 @@ public class BlankTemplateBackend {
 			persistence = b.build();
 		}
 
+		invocables = types().stream()
+				.flatMap(x -> Arrays.stream(x.getMethods())
+						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
+						.map(y -> new Invocable(x, y)))
+				.toList();
 		{
-			var f = diFactory.create(ApplicationHandlerFactory.class, Map.of("methods",
-					types().stream().flatMap(x -> Arrays.stream(x.getMethods())
-							.filter(y -> !Modifier.isStatic(y.getModifiers())).map(y -> new Invocable(x, y)))
-							.toList(),
-					"files", List.of()));
+			var f = diFactory.create(ApplicationHandlerFactory.class);
 			handler = x -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)
@@ -144,6 +152,10 @@ public class BlankTemplateBackend {
 
 	public HttpHandler handler() {
 		return handler;
+	}
+
+	public List<Invocable> invocables() {
+		return invocables;
 	}
 
 	public Persistence persistence() {

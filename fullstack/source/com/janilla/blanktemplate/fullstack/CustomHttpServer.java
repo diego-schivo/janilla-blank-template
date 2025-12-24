@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,29 +26,29 @@ package com.janilla.blanktemplate.fullstack;
 
 import java.net.SocketAddress;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.blanktemplate.backend.BlankTemplateBackend;
-import com.janilla.blanktemplate.frontend.BlankTemplateFrontend;
+import com.janilla.blanktemplate.backend.BlankBackend;
+import com.janilla.blanktemplate.frontend.BlankFrontend;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.Context;
+import com.janilla.ioc.DiFactory;
 
 @Context("fullstack")
 public class CustomHttpServer extends HttpServer {
 
-	protected final BlankTemplateBackend backend;
+	protected final BlankBackend backend;
 
-	protected final BlankTemplateFrontend frontend;
+	protected final BlankFrontend frontend;
 
-	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler,
-			BlankTemplateBackend backend, BlankTemplateFrontend frontend) {
-		super(sslContext, endpoint, handler);
+	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler, DiFactory diFactory,
+			BlankBackend backend, BlankFrontend frontend) {
+		super(sslContext, endpoint, handler, diFactory);
 		this.backend = backend;
 		this.frontend = frontend;
 	}
@@ -56,7 +57,7 @@ public class CustomHttpServer extends HttpServer {
 	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
 //		IO.println("CustomHttpServer.createExchange, request.getPath()=" + request.getPath());
 		var f = request.getPath().startsWith("/api/") ? backend.diFactory() : frontend.diFactory();
-		return Optional.ofNullable(f.create(HttpExchange.class, Map.of("request", request, "response", response)))
-				.orElseGet(() -> super.createExchange(request, response));
+		var x = f.create(HttpExchange.class, Map.of("request", request, "response", response));
+		return x != null ? x : super.createExchange(request, response);
 	}
 }

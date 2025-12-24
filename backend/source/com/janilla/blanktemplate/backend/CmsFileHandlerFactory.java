@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,13 +33,17 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
+import com.janilla.web.FileHandlerFactory;
 
-public class CmsFileHandlerFactory implements HttpHandlerFactory {
+public class CmsFileHandlerFactory implements FileHandlerFactory {
 
-	public Properties configuration;
+	protected final Properties configuration;
+
+	public CmsFileHandlerFactory(Properties configuration) {
+		this.configuration = configuration;
+	}
 
 	@Override
 	public HttpHandler createHandler(Object object) {

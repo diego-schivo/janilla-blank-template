@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,22 +24,18 @@
  */
 package com.janilla.blanktemplate.fullstack;
 
-import java.util.Properties;
+import java.util.Map;
 
-import com.janilla.blanktemplate.backend.UserApi;
-import com.janilla.blanktemplate.frontend.DataFetching;
-import com.janilla.http.HttpClient;
+import com.janilla.blanktemplate.backend.BlankBackend;
+import com.janilla.http.DirectHttpClient;
+import com.janilla.http.HttpServer;
 import com.janilla.ioc.Context;
 
 @Context("frontend")
-public class CustomDataFetching extends DataFetching {
+public class CustomHttpClient extends DirectHttpClient {
 
-	public CustomDataFetching(Properties configuration, HttpClient httpClient) {
-		super(configuration, httpClient);
-	}
-
-	@Override
-	public Object users() {
-		return UserApi.INSTANCE.get().read((Long) null, (Long) null);
+	public CustomHttpClient() {
+		var b = BlankBackend.INSTANCE.get();
+		super(b.diFactory().create(HttpServer.class, Map.of("handler", b.handler())));
 	}
 }

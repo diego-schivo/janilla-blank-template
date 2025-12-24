@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,66 +22,60 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import CmsAdmin from "./cms-admin.js";
-import CmsArray from "./cms-array.js";
-import CmsCheckbox from "./cms-checkbox.js";
-import CmsCollection from "./cms-collection.js";
-import CmsDashboard from "./cms-dashboard.js";
-import CmsDatetime from "./cms-datetime.js";
-import CmsDocument from "./cms-document.js";
-import CmsDocumentReference from "./cms-document-reference.js";
-import CmsEdit from "./cms-edit.js";
-import CmsFile from "./cms-file.js";
-import CmsFirstRegister from "./cms-first-register.js";
-import CmsForgotPassword from "./cms-forgot-password.js";
-import CmsLogin from "./cms-login.js";
-import CmsObject from "./cms-object.js";
-import CmsRadio from "./cms-radio.js";
-import CmsReference from "./cms-reference.js";
-import CmsReferenceArray from "./cms-reference-array.js";
-import CmsResetPassword from "./cms-reset-password.js";
-import CmsRichText from "./cms-rich-text.js";
-import CmsSelect from "./cms-select.js";
-import CmsSlug from "./cms-slug.js";
-import CmsTabs from "./cms-tabs.js";
-import CmsText from "./cms-text.js";
-import CmsTextarea from "./cms-textarea.js";
-import CmsToasts from "./cms-toasts.js";
-import CmsVersion from "./cms-version.js";
-import CmsVersions from "./cms-versions.js";
-import LucideIcon from "./lucide-icon.js";
-import NotFound from "./not-found.js";
-import Page from "./page.js";
-import Root from "./root.js";
+import Admin from "admin";
+import AdminArray from "admin-array";
+import AdminBar from "admin-bar";
+import AdminCheckbox from "admin-checkbox";
+import AdminCreateFirstUser from "admin-create-first-user";
+import AdminDashboard from "admin-dashboard";
+import AdminDocument from "admin-document";
+import AdminDrawer from "admin-drawer";
+import AdminDrawerLink from "admin-drawer-link";
+import AdminEdit from "admin-edit";
+import AdminFields from "admin-fields";
+import AdminFile from "admin-file";
+import AdminHidden from "admin-hidden";
+import AdminJoin from "admin-join";
+import AdminList from "admin-list";
+import AdminLogin from "admin-login";
+import AdminRadioGroup from "admin-radio-group";
+import AdminRelationship from "admin-relationship";
+import AdminRichText from "admin-rich-text";
+import AdminSelect from "admin-select";
+import AdminSlug from "admin-slug";
+import AdminTabs from "admin-tabs";
+import AdminText from "admin-text";
+import AdminUnauthorized from "admin-unauthorized";
+import AdminUpload from "admin-upload";
+import App from "app";
+import NotFound from "not-found";
+import Page from "page";
 
-customElements.define("cms-admin", CmsAdmin);
-customElements.define("cms-array", CmsArray);
-customElements.define("cms-checkbox", CmsCheckbox);
-customElements.define("cms-collection", CmsCollection);
-customElements.define("cms-dashboard", CmsDashboard);
-customElements.define("cms-datetime", CmsDatetime);
-customElements.define("cms-document", CmsDocument);
-customElements.define("cms-document-reference", CmsDocumentReference);
-customElements.define("cms-edit", CmsEdit);
-customElements.define("cms-file", CmsFile);
-customElements.define("cms-first-register", CmsFirstRegister);
-customElements.define("cms-forgot-password", CmsForgotPassword);
-customElements.define("cms-login", CmsLogin);
-customElements.define("cms-object", CmsObject);
-customElements.define("cms-radio", CmsRadio);
-customElements.define("cms-reference", CmsReference);
-customElements.define("cms-reference-array", CmsReferenceArray);
-customElements.define("cms-reset-password", CmsResetPassword);
-customElements.define("cms-rich-text", CmsRichText);
-customElements.define("cms-select", CmsSelect);
-customElements.define("cms-slug", CmsSlug);
-customElements.define("cms-tabs", CmsTabs);
-customElements.define("cms-text", CmsText);
-customElements.define("cms-textarea", CmsTextarea);
-customElements.define("cms-toasts", CmsToasts);
-customElements.define("cms-version", CmsVersion);
-customElements.define("cms-versions", CmsVersions);
-customElements.define("lucide-icon", LucideIcon);
+customElements.define("admin-array", AdminArray);
+customElements.define("admin-bar", AdminBar);
+customElements.define("admin-checkbox", AdminCheckbox);
+customElements.define("admin-create-first-user", AdminCreateFirstUser);
+customElements.define("admin-dashboard", AdminDashboard);
+customElements.define("admin-document", AdminDocument);
+customElements.define("admin-drawer", AdminDrawer);
+customElements.define("admin-drawer-link", AdminDrawerLink);
+customElements.define("admin-edit", AdminEdit);
+customElements.define("admin-element", Admin);
+customElements.define("admin-fields", AdminFields);
+customElements.define("admin-file", AdminFile);
+customElements.define("admin-hidden", AdminHidden);
+customElements.define("admin-join", AdminJoin);
+customElements.define("admin-list", AdminList);
+customElements.define("admin-login", AdminLogin);
+customElements.define("admin-radio-group", AdminRadioGroup);
+customElements.define("admin-relationship", AdminRelationship);
+customElements.define("admin-rich-text", AdminRichText);
+customElements.define("admin-select", AdminSelect);
+customElements.define("admin-slug", AdminSlug);
+customElements.define("admin-tabs", AdminTabs);
+customElements.define("admin-text", AdminText);
+customElements.define("admin-unauthorized", AdminUnauthorized);
+customElements.define("admin-upload", AdminUpload);
+customElements.define("app-element", App);
 customElements.define("not-found", NotFound);
 customElements.define("page-element", Page);
-customElements.define("root-element", Root);

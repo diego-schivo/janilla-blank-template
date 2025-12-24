@@ -26,40 +26,51 @@ package com.janilla.blanktemplate.frontend;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Properties;
 
-import com.janilla.http.HttpClient;
-import com.janilla.http.HttpCookie;
 import com.janilla.net.UriQueryBuilder;
+import com.janilla.web.Bind;
+import com.janilla.web.Handle;
+import com.janilla.web.NotFoundException;
 
-public class DataFetching {
+public class WebHandling {
 
-	protected final Properties configuration;
+	protected final DataFetching dataFetching;
 
-	protected final HttpClient httpClient;
+	protected final IndexFactory indexFactory;
 
-	public DataFetching(Properties configuration, HttpClient httpClient) {
-		this.configuration = configuration;
-		this.httpClient = httpClient;
+	public WebHandling(DataFetching dataFetching, IndexFactory indexFactory) {
+		this.dataFetching = dataFetching;
+		this.indexFactory = indexFactory;
 	}
 
-	public List<?> pages(String slug, HttpCookie token) {
-		return (List<?>) httpClient.getJson(
-				slug != null
-						? URI.create(configuration.getProperty("blank-template.api.url") + "/pages?"
-								+ new UriQueryBuilder().append("slug", slug))
-						: URI.create(configuration.getProperty("blank-template.api.url") + "/pages"),
-				token != null ? token.format() : null);
+	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
+	public Object admin(String path, FrontendExchange exchange) {
+		IO.println("Admin.admin, path=" + path);
+		if (path == null || path.isEmpty())
+			path = "/";
+		switch (path) {
+		case "/":
+			if (exchange.sessionUser() == null)
+				return URI.create("/admin/login");
+			break;
+		case "/login":
+			if (((List<?>) dataFetching.users(0l, 1l)).isEmpty())
+				return URI.create("/admin/create-first-user");
+			break;
+		}
+		return indexFactory.index(exchange);
 	}
 
-	public Object sessionUser(HttpCookie token) {
-		return httpClient.getJson(URI.create(configuration.getProperty("blank-template.api.url") + "/users/me"),
-				token != null ? token.format() : null);
-	}
-
-	public List<?> users(Long skip, Long limit) {
-		return (List<?>) httpClient.getJson(URI.create(configuration.getProperty("blank-template.api.url") + "/users?"
-				+ new UriQueryBuilder().append("skip", skip != null ? skip.toString() : null).append("limit",
-						limit != null ? limit.toString() : null)));
+	@Handle(method = "GET", path = "/([\\w\\d-]*)")
+	public Object page(String slug, FrontendExchange exchange) {
+		IO.println("WebHandling.page, slug=" + slug);
+		if (slug == null || slug.isEmpty())
+			slug = "home";
+		var pp = dataFetching.pages(slug, exchange.tokenCookie());
+		if (pp.isEmpty() && !slug.equals("home"))
+			throw new NotFoundException("slug=" + slug);
+		var i = indexFactory.index(exchange);
+		i.state().put("page", !pp.isEmpty() ? pp.getFirst() : null);
+		return i;
 	}
 }

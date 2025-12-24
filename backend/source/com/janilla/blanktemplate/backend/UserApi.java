@@ -1,7 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
+ * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,7 +66,7 @@ public class UserApi extends CollectionApi<Long, User> {
 	}
 
 	@Handle(method = "POST", path = "login")
-	public User login(User user, String password, CustomHttpExchange exchange) {
+	public User login(User user, String password, BackendExchange exchange) {
 		if (user == null || user.email() == null || user.email().isBlank() || password == null || password.isBlank())
 			throw new BadRequestException("Please correct invalid fields.");
 		var u = crud().read(crud().find("email", user.email()));
@@ -81,17 +82,17 @@ public class UserApi extends CollectionApi<Long, User> {
 	}
 
 	@Handle(method = "POST", path = "logout")
-	public void logout(CustomHttpExchange exchange) {
+	public void logout(BackendExchange exchange) {
 		exchange.setSessionCookie(null);
 	}
 
 	@Handle(method = "GET", path = "me")
-	public User me(CustomHttpExchange exchange) {
+	public User me(BackendExchange exchange) {
 		return exchange.sessionUser();
 	}
 
 	@Handle(method = "POST", path = "first-register")
-	public User firstRegister(User user, String password, String confirmPassword, CustomHttpExchange exchange) {
+	public User firstRegister(User user, String password, String confirmPassword, BackendExchange exchange) {
 		if (user == null || user.email() == null || user.email().isBlank() || password == null || password.isBlank()
 				|| !password.equals(confirmPassword))
 			throw new BadRequestException("Please correct invalid fields.");
@@ -133,7 +134,7 @@ public class UserApi extends CollectionApi<Long, User> {
 	}
 
 	@Handle(method = "POST", path = "reset-password")
-	public User resetPassword(String token, String password, String confirmPassword, CustomHttpExchange exchange) {
+	public User resetPassword(String token, String password, String confirmPassword, BackendExchange exchange) {
 		if (token == null || token.isBlank() || password == null || password.isBlank()
 				|| !password.equals(confirmPassword))
 			throw new BadRequestException("Please correct invalid fields.");
@@ -156,7 +157,7 @@ public class UserApi extends CollectionApi<Long, User> {
 	}
 
 	@Handle(method = "DELETE", path = "(\\d+)")
-	public User delete(Long id, CustomHttpExchange exchange) {
+	public User delete(Long id, BackendExchange exchange) {
 		var u = exchange.sessionUser();
 		var x = super.delete(id);
 		if (id == u.id())
@@ -170,7 +171,7 @@ public class UserApi extends CollectionApi<Long, User> {
 	}
 
 	@Handle(method = "DELETE")
-	public List<User> delete(@Bind("id") List<Long> ids, CustomHttpExchange exchange) {
+	public List<User> delete(@Bind("id") List<Long> ids, BackendExchange exchange) {
 		var u = exchange.sessionUser();
 		var x = super.delete(ids);
 		if (ids.contains(u.id()))

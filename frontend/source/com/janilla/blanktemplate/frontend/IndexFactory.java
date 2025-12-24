@@ -22,15 +22,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import WebComponent from "./web-component.js";
+package com.janilla.blanktemplate.frontend;
 
-export default class NotFound extends WebComponent {
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Stream;
 
-	static get templateNames() {
-		return ["not-found"];
+import com.janilla.admin.frontend.AdminFrontend;
+import com.janilla.frontend.Frontend;
+
+public class IndexFactory {
+
+	protected final Properties configuration;
+
+	protected final DataFetching dataFetching;
+
+	public IndexFactory(Properties configuration, DataFetching dataFetching) {
+		this.configuration = configuration;
+		this.dataFetching = dataFetching;
 	}
 
-	constructor() {
-		super();
+	public Index index(FrontendExchange exchange) {
+		return new Index(imports(), configuration.getProperty("ecommerce-template.api.url"), state(exchange));
+	}
+
+	protected Map<String, Object> state(FrontendExchange exchange) {
+		var x = new LinkedHashMap<String, Object>();
+		return x;
+	}
+
+	protected Map<String, String> imports() {
+		var m = new LinkedHashMap<String, String>();
+		Frontend.putImports(m);
+		AdminFrontend.putImports(m);
+		Stream.of("app", "not-found", "page").forEach(x -> m.put(x, "/" + x + ".js"));
+		return m;
 	}
 }
