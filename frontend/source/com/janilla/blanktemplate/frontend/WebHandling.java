@@ -27,10 +27,7 @@ package com.janilla.blanktemplate.frontend;
 import java.net.URI;
 import java.util.List;
 
-import com.janilla.net.UriQueryBuilder;
-import com.janilla.web.Bind;
 import com.janilla.web.Handle;
-import com.janilla.web.NotFoundException;
 
 public class WebHandling {
 
@@ -45,7 +42,7 @@ public class WebHandling {
 
 	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
 	public Object admin(String path, FrontendExchange exchange) {
-		IO.println("Admin.admin, path=" + path);
+		IO.println("WebHandling.admin, path=" + path);
 		if (path == null || path.isEmpty())
 			path = "/";
 		switch (path) {
@@ -61,16 +58,9 @@ public class WebHandling {
 		return indexFactory.index(exchange);
 	}
 
-	@Handle(method = "GET", path = "/([\\w\\d-]*)")
-	public Object page(String slug, FrontendExchange exchange) {
-		IO.println("WebHandling.page, slug=" + slug);
-		if (slug == null || slug.isEmpty())
-			slug = "home";
-		var pp = dataFetching.pages(slug, exchange.tokenCookie());
-		if (pp.isEmpty() && !slug.equals("home"))
-			throw new NotFoundException("slug=" + slug);
-		var i = indexFactory.index(exchange);
-		i.state().put("page", !pp.isEmpty() ? pp.getFirst() : null);
-		return i;
+	@Handle(method = "GET", path = "/")
+	public Object page(FrontendExchange exchange) {
+		IO.println("WebHandling.page");
+		return indexFactory.index(exchange);
 	}
 }

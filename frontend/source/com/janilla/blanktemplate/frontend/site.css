@@ -23,6 +23,8 @@
  * SOFTWARE.
  */
 @import "base.css";
+
 @import "app.css";
+@import "lucide-icon.css";
 @import "not-found.css";
 @import "page.css";

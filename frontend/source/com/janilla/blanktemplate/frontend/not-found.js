@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import WebComponent from "./web-component.js";
+import WebComponent from "web-component";
 
 export default class NotFound extends WebComponent {
 
@@ -32,5 +32,10 @@ export default class NotFound extends WebComponent {
 
 	constructor() {
 		super();
+	}
+
+	async updateDisplay() {
+	    document.title = "404: This page could not be found.";
+	    this.appendChild(this.interpolateDom({ $template: "" }));
 	}
 }

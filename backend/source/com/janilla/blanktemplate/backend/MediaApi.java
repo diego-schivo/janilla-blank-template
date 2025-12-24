@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Predicate;
 
+import com.janilla.cms.CmsFileHandlerFactory;
 import com.janilla.cms.CollectionApi;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpResponse;

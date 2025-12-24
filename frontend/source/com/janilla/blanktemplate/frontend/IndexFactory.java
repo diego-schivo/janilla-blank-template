@@ -36,15 +36,12 @@ public class IndexFactory {
 
 	protected final Properties configuration;
 
-	protected final DataFetching dataFetching;
-
-	public IndexFactory(Properties configuration, DataFetching dataFetching) {
+	public IndexFactory(Properties configuration) {
 		this.configuration = configuration;
-		this.dataFetching = dataFetching;
 	}
 
 	public Index index(FrontendExchange exchange) {
-		return new Index(imports(), configuration.getProperty("ecommerce-template.api.url"), state(exchange));
+		return new Index(imports(), configuration.getProperty("blank-template.api.url"), state(exchange));
 	}
 
 	protected Map<String, Object> state(FrontendExchange exchange) {

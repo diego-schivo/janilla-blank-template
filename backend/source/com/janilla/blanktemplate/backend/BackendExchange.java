@@ -31,15 +31,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.janilla.http.SimpleHttpExchange;
+import com.janilla.cms.UserHttpExchange;
 import com.janilla.http.HttpCookie;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
+import com.janilla.http.SimpleHttpExchange;
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
 import com.janilla.web.UnauthorizedException;
 
-public class BackendExchange extends SimpleHttpExchange {
+public class BackendExchange extends SimpleHttpExchange implements UserHttpExchange {
 
 	private static final String SESSION_COOKIE = "blank-token";
 
@@ -71,6 +72,7 @@ public class BackendExchange extends SimpleHttpExchange {
 		return (String) session.get("sessionEmail");
 	}
 
+	@Override
 	public User sessionUser() {
 		if (!session.containsKey("sessionUser")) {
 			var e = sessionEmail();
@@ -82,9 +84,10 @@ public class BackendExchange extends SimpleHttpExchange {
 
 	public void requireSessionEmail() {
 		if (sessionEmail() == null)
-			throw new UnauthorizedException();
+			throw new UnauthorizedException("Unauthorized, you must be logged in to make this request.");
 	}
 
+	@Override
 	public void setSessionCookie(String value) {
 		response().setHeaderValue("set-cookie",
 				HttpCookie.of(SESSION_COOKIE, value).withPath("/").withHttpOnly(true).withSameSite("Lax")

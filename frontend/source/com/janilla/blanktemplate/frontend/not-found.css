@@ -23,4 +23,36 @@
  * SOFTWARE.
  */
 not-found {
+  main {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: center;
+  }
+
+  article {
+    align-items: center;
+    display: flex;
+  }
+
+  h1,
+  h2 {
+    color: var(--color-2);
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+
+  h1 {
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 2.0417;
+    margin-right: 1.25rem;
+    padding-right: 1.4375rem;
+  }
+
+  h2 {
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
 }

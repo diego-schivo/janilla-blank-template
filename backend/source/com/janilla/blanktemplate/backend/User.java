@@ -31,19 +31,20 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Random;
+import java.util.Set;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import com.janilla.cms.Document;
 import com.janilla.cms.DocumentStatus;
 import com.janilla.persistence.Index;
 import com.janilla.persistence.Store;
 
 @Store
 public record User(Long id, String name, @Index String email, String salt, String hash,
-		@Index String resetPasswordToken, Instant resetPasswordExpiration, Instant createdAt, Instant updatedAt,
-		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
+		@Index String resetPasswordToken, Instant resetPasswordExpiration, Set<UserRole> roles, Instant createdAt,
+		Instant updatedAt, DocumentStatus documentStatus, Instant publishedAt)
+		implements com.janilla.cms.User<Long, UserRole> {
 
 	private static final SecretKeyFactory SECRET;
 
@@ -68,6 +69,11 @@ public record User(Long id, String name, @Index String email, String salt, Strin
 		return k.getEncoded();
 	}
 
+	public boolean hasRole(UserRole role) {
+		return roles != null && roles.contains(role);
+	}
+
+	@Override
 	public boolean passwordEquals(String password) {
 		var f = HexFormat.of();
 		var s = f.parseHex(salt);
@@ -75,17 +81,28 @@ public record User(Long id, String name, @Index String email, String salt, Strin
 		return f.formatHex(h).equals(hash);
 	}
 
+	@Override
 	public User withPassword(String password) {
+		if (password == null || password.isEmpty())
+			return new User(id, name, email, null, null, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
+					updatedAt, documentStatus, publishedAt);
 		var s = new byte[16];
 		RANDOM.nextBytes(s);
 		var h = hash(password.toCharArray(), s);
 		var f = HexFormat.of();
 		return new User(id, name, email, f.formatHex(s), f.formatHex(h), resetPasswordToken, resetPasswordExpiration,
-				createdAt, updatedAt, documentStatus, publishedAt);
+				roles, createdAt, updatedAt, documentStatus, publishedAt);
 	}
 
+	@Override
 	public User withResetPassword(String resetPasswordToken, Instant resetPasswordExpiration) {
-		return new User(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, createdAt, updatedAt,
-				documentStatus, publishedAt);
+		return new User(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
+				updatedAt, documentStatus, publishedAt);
+	}
+
+	@Override
+	public User withRoles(Set<UserRole> roles) {
+		return new User(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
+				updatedAt, documentStatus, publishedAt);
 	}
 }

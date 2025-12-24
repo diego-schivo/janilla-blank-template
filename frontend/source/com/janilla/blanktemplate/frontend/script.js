@@ -48,6 +48,7 @@ import AdminText from "admin-text";
 import AdminUnauthorized from "admin-unauthorized";
 import AdminUpload from "admin-upload";
 import App from "app";
+import LucideIcon from "lucide-icon";
 import NotFound from "not-found";
 import Page from "page";
 
@@ -77,5 +78,6 @@ customElements.define("admin-text", AdminText);
 customElements.define("admin-unauthorized", AdminUnauthorized);
 customElements.define("admin-upload", AdminUpload);
 customElements.define("app-element", App);
+customElements.define("lucide-icon", LucideIcon);
 customElements.define("not-found", NotFound);
 customElements.define("page-element", Page);

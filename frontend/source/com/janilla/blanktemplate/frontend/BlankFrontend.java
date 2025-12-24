@@ -99,6 +99,8 @@ public class BlankFrontend {
 
 	protected final HttpClient httpClient;
 
+	protected final IndexFactory indexFactory;
+
 	protected final List<Invocable> invocables;
 
 	protected final RenderableFactory renderableFactory;
@@ -119,6 +121,7 @@ public class BlankFrontend {
 			httpClient = diFactory.create(HttpClient.class, Map.of("sslContext", c));
 		}
 		dataFetching = diFactory.create(DataFetching.class);
+		indexFactory = diFactory.create(IndexFactory.class);
 
 		files = Stream.of("com.janilla.frontend", "com.janilla.admin.frontend", BlankFrontend.class.getPackageName())
 				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
@@ -161,6 +164,10 @@ public class BlankFrontend {
 
 	public HttpClient httpClient() {
 		return httpClient;
+	}
+
+	public IndexFactory indexFactory() {
+		return indexFactory;
 	}
 
 	public List<Invocable> invocables() {

@@ -34,32 +34,22 @@ import com.janilla.net.UriQueryBuilder;
 
 public class DataFetching {
 
-	protected final Properties configuration;
+	protected final String apiUrl;
 
 	protected final HttpClient httpClient;
 
 	public DataFetching(Properties configuration, HttpClient httpClient) {
-		this.configuration = configuration;
+		apiUrl = configuration.getProperty("blank-template.api.url");
 		this.httpClient = httpClient;
 	}
 
-	public List<?> pages(String slug, HttpCookie token) {
-		return (List<?>) httpClient.getJson(
-				slug != null
-						? URI.create(configuration.getProperty("blank-template.api.url") + "/pages?"
-								+ new UriQueryBuilder().append("slug", slug))
-						: URI.create(configuration.getProperty("blank-template.api.url") + "/pages"),
-				token != null ? token.format() : null);
-	}
-
 	public Object sessionUser(HttpCookie token) {
-		return httpClient.getJson(URI.create(configuration.getProperty("blank-template.api.url") + "/users/me"),
-				token != null ? token.format() : null);
+		return httpClient.getJson(URI.create(apiUrl + "/users/me"), token != null ? token.format() : null);
 	}
 
 	public List<?> users(Long skip, Long limit) {
-		return (List<?>) httpClient.getJson(URI.create(configuration.getProperty("blank-template.api.url") + "/users?"
-				+ new UriQueryBuilder().append("skip", skip != null ? skip.toString() : null).append("limit",
-						limit != null ? limit.toString() : null)));
+		return (List<?>) httpClient.getJson(URI
+				.create(apiUrl + "/users?" + new UriQueryBuilder().append("skip", skip != null ? skip.toString() : null)
+						.append("limit", limit != null ? limit.toString() : null)));
 	}
 }

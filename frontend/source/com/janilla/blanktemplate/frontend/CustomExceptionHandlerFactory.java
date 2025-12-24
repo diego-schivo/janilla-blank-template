@@ -22,32 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import WebComponent from "web-component";
+package com.janilla.blanktemplate.frontend;
 
-export default class Page extends WebComponent {
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandlerFactory;
+import com.janilla.web.Error;
+import com.janilla.web.ExceptionHandlerFactory;
+import com.janilla.web.RenderableFactory;
 
-    static get templateNames() {
-        return ["page"];
-    }
+public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 
-    static get observedAttributes() {
-        return ["data-slug"];
-    }
+	protected final IndexFactory indexFactory;
 
-    constructor() {
-        super();
-    }
+	protected final RenderableFactory renderableFactory;
 
-    async updateDisplay() {
-        const a = this.closest("app-element");
-        if (this.dataset.slug === "home")
-            this.appendChild(this.interpolateDom({
-                $template: "",
-                text: a.user
-                    ? `Welcome back, ${a.user.email}`
-                    : "Welcome to your new project."
-            }));
-        else
-            a.notFound();
-    }
+	protected final HttpHandlerFactory rootFactory;
+
+	public CustomExceptionHandlerFactory(IndexFactory indexFactory, RenderableFactory renderableFactory,
+			HttpHandlerFactory rootFactory) {
+		this.indexFactory = indexFactory;
+		this.renderableFactory = renderableFactory;
+		this.rootFactory = rootFactory;
+	}
+
+	@Override
+	protected boolean handle(Error error, HttpExchange exchange) {
+//		IO.println(
+//				"CustomExceptionHandlerFactory.handle, " + exchange.request().getPath() + ", " + exchange.exception());
+		super.handle(error, exchange);
+		var i = indexFactory.index((FrontendExchange) exchange);
+		i.state().put("error", error);
+		var r = renderableFactory.createRenderable(null, i);
+		var h = rootFactory.createHandler(r);
+		return h.handle(exchange);
+	}
 }

@@ -65,7 +65,7 @@ public class FrontendExchange extends SimpleHttpExchange {
 			var t = tokenCookie();
 			Map<String, ?> p;
 			try {
-				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty("ecommerce-template.jwt.key"))
+				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty("blank-template.jwt.key"))
 						: null;
 			} catch (IllegalArgumentException e) {
 				p = null;

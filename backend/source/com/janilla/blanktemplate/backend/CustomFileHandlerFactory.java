@@ -22,32 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import WebComponent from "web-component";
+package com.janilla.blanktemplate.backend;
 
-export default class Page extends WebComponent {
+import java.nio.file.Path;
+import java.util.Properties;
 
-    static get templateNames() {
-        return ["page"];
-    }
+import com.janilla.cms.CmsFileHandlerFactory;
 
-    static get observedAttributes() {
-        return ["data-slug"];
-    }
+public class CustomFileHandlerFactory extends CmsFileHandlerFactory {
 
-    constructor() {
-        super();
-    }
-
-    async updateDisplay() {
-        const a = this.closest("app-element");
-        if (this.dataset.slug === "home")
-            this.appendChild(this.interpolateDom({
-                $template: "",
-                text: a.user
-                    ? `Welcome back, ${a.user.email}`
-                    : "Welcome to your new project."
-            }));
-        else
-            a.notFound();
-    }
+	public CustomFileHandlerFactory(Properties configuration) {
+		var d = configuration.getProperty("blank-template.upload.directory");
+		if (d.startsWith("~"))
+			d = System.getProperty("user.home") + d.substring(1);
+		super(Path.of(d));
+	}
 }
