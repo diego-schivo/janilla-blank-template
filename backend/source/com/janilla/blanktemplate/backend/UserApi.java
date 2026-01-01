@@ -45,15 +45,6 @@ public class UserApi extends com.janilla.cms.UserApi<Long, UserRole, User> {
 			throw new IllegalStateException();
 	}
 
-//	@Handle(method = "POST")
-//	public User create(CreateData<User> data, BackendExchange exchange) {
-//		if (exchange.sessionUser() == null) {
-//			var u = data.user().withRoles(Set.of(UserRole.CUSTOMER));
-//			data = data.withUser(u);
-//		}
-//		return super.create(data);
-//	}
-
 	@Override
 	public User firstRegister(CreateData<User> data, UserHttpExchange exchange) {
 		var u = data.user().withRoles(Set.of(UserRole.ADMIN));
