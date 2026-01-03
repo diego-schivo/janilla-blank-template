@@ -2,7 +2,7 @@
  * MIT License
  *
  * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
- * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
+ * Copyright (c) 2024-2026 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -123,13 +123,13 @@ public class BlankFrontend {
 		dataFetching = diFactory.create(DataFetching.class);
 		indexFactory = diFactory.create(IndexFactory.class);
 
-		files = Stream.of("com.janilla.frontend", "com.janilla.admin.frontend", BlankFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
 		invocables = types().stream()
 				.flatMap(x -> Arrays.stream(x.getMethods())
 						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
 						.map(y -> new Invocable(x, y)))
 				.toList();
+		files = Stream.of("com.janilla.frontend", "com.janilla.cms", BlankFrontend.class.getPackageName())
+				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
 		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);

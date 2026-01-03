@@ -2,7 +2,7 @@
  * MIT License
  *
  * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
- * Copyright (c) 2024-2025 Diego Schivo <diego.schivo@janilla.com>
+ * Copyright (c) 2024-2026 Diego Schivo <diego.schivo@janilla.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ public class WebHandling {
 
 	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
 	public Object admin(String path, FrontendExchange exchange) {
-		IO.println("WebHandling.admin, path=" + path);
+//		IO.println("WebHandling.admin, path=" + path);
 		if (path == null || path.isEmpty())
 			path = "/";
 		switch (path) {
@@ -60,7 +60,7 @@ public class WebHandling {
 
 	@Handle(method = "GET", path = "/")
 	public Object page(FrontendExchange exchange) {
-		IO.println("WebHandling.page");
+//		IO.println("WebHandling.page");
 		return indexFactory.index(exchange);
 	}
 }
