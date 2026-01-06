@@ -49,8 +49,10 @@ public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 
 	public static final AtomicReference<CustomInvocationHandlerFactory> INSTANCE = new AtomicReference<>();
 
-	protected static final Set<String> USER_POST = Set.of("/api/users/first-register", "/api/users/forgot-password",
+	protected static final Set<String> GUEST_POST = Set.of("/api/users/first-register", "/api/users/forgot-password",
 			"/api/users/login", "/api/users/reset-password");
+
+	protected static final Set<String> USER_LOGIN_LOGOUT = Set.of("/api/users/login", "/api/users/logout");
 
 	protected final Properties configuration;
 
@@ -69,15 +71,20 @@ public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 	@Override
 	protected boolean handle(Invocation invocation, HttpExchange exchange) {
 		var rq = exchange.request();
-		if (rq.getPath().startsWith("/api/") && !rq.getMethod().equals("GET")) {
-			if (rq.getMethod().equals("OPTIONS") || USER_POST.contains(rq.getPath()))
-				;
-			else
+		if (rq.getPath().startsWith("/api/"))
+			switch (rq.getMethod()) {
+			case "GET", "OPTIONS":
+				break;
+			case "POST":
+				if (GUEST_POST.contains(rq.getPath()))
+					break;
+			default:
 				((BackendExchange) exchange).requireSessionEmail();
-		}
+				break;
+			}
 
 		if (Boolean.parseBoolean(configuration.getProperty("blank-template.live-demo"))) {
-			if (rq.getMethod().equals("GET") || USER_POST.contains(rq.getPath()))
+			if (rq.getMethod().equals("GET") || USER_LOGIN_LOGOUT.contains(rq.getPath()))
 				;
 			else
 				throw new HandleException(new MethodBlockedException());

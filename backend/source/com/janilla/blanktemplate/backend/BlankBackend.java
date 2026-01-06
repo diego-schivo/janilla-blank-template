@@ -55,6 +55,7 @@ import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Handle;
 import com.janilla.web.Invocable;
 import com.janilla.web.NotFoundException;
+import com.janilla.web.RenderableFactory;
 
 public class BlankBackend {
 
@@ -105,6 +106,8 @@ public class BlankBackend {
 
 	protected final Persistence persistence;
 
+	protected final RenderableFactory renderableFactory;
+
 	protected final TypeResolver typeResolver;
 
 	public BlankBackend(DiFactory diFactory, Path configurationFile) {
@@ -127,6 +130,7 @@ public class BlankBackend {
 						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
 						.map(y -> new Invocable(x, y)))
 				.toList();
+		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);
 			handler = x -> {
@@ -160,6 +164,10 @@ public class BlankBackend {
 
 	public Persistence persistence() {
 		return persistence;
+	}
+
+	public RenderableFactory renderableFactory() {
+		return renderableFactory;
 	}
 
 	public TypeResolver typeResolver() {

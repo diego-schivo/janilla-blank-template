@@ -22,48 +22,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.frontend;
+package com.janilla.blanktemplate.backend;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Stream;
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandlerFactory;
+import com.janilla.web.Error;
+import com.janilla.web.ExceptionHandlerFactory;
+import com.janilla.web.RenderableFactory;
 
-import com.janilla.cms.CmsFrontend;
-import com.janilla.frontend.Frontend;
-import com.janilla.frontend.resources.FrontendResources;
+public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 
-public class IndexFactory {
+	protected final RenderableFactory renderableFactory;
 
-	protected final Properties configuration;
+	protected final HttpHandlerFactory rootFactory;
 
-	public IndexFactory(Properties configuration) {
-		this.configuration = configuration;
+	public CustomExceptionHandlerFactory(RenderableFactory renderableFactory, HttpHandlerFactory rootFactory) {
+		this.renderableFactory = renderableFactory;
+		this.rootFactory = rootFactory;
 	}
 
-	public Index index(FrontendExchange exchange) {
-		return new Index(imports(), configuration.getProperty("blank-template.api.url"), state(exchange));
-	}
-
-	protected Map<String, Object> state(FrontendExchange exchange) {
-		var x = new LinkedHashMap<String, Object>();
-		return x;
-	}
-
-	protected Map<String, String> imports() {
-		class A {
-			private static Map<String, String> m;
-		}
-		if (A.m == null)
-			synchronized (this) {
-				if (A.m == null) {
-					A.m = new LinkedHashMap<String, String>();
-					Frontend.putImports(A.m);
-					FrontendResources.putImports(A.m);
-					CmsFrontend.putImports(A.m);
-					Stream.of("app", "not-found", "page").forEach(x -> A.m.put(x, "/" + x + ".js"));
-				}
-			}
-		return A.m;
+	@Override
+	protected boolean handle(Error error, HttpExchange exchange) {
+		super.handle(error, exchange);
+		var r = renderableFactory.createRenderable(null, exchange.exception().getMessage());
+		var h = rootFactory.createHandler(r);
+		return h.handle(exchange);
 	}
 }
