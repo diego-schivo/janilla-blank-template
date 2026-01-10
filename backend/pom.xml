@@ -19,7 +19,7 @@
 						<argument>-p</argument>
 						<modulepath/>
 						<argument>-m</argument>
-						<argument>com.janilla.blanktemplate.backend/com.janilla.blanktemplate.backend.BlankTemplateBackend</argument>
+						<argument>com.janilla.blanktemplate.backend/com.janilla.blanktemplate.backend.BlankBackend</argument>
 					</arguments>
 				</configuration>
 			</plugin>

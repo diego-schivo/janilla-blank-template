@@ -29,7 +29,7 @@
 						<argument>-p</argument>
 						<modulepath/>
 						<argument>-m</argument>
-						<argument>com.janilla.blanktemplate.fullstack/com.janilla.blanktemplate.fullstack.BlankTemplateFullstack</argument>
+						<argument>com.janilla.blanktemplate.fullstack/com.janilla.blanktemplate.fullstack.BlankFullstack</argument>
 					</arguments>
 				</configuration>
 			</plugin>
