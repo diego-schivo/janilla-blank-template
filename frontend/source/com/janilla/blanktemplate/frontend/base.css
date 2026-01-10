@@ -22,14 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-:root,
-:host {
+:where(:root:not(:has(.admin)), :host:not(:has(.admin))) {
   color-scheme: light dark;
   line-height: 1.5;
   text-size-adjust: 100%;
-}
 
-:root {
+  &:has([data-color-scheme="light"]) {
+    color-scheme: light;
+  }
+
+  &:has([data-color-scheme="dark"]) {
+    color-scheme: dark;
+  }
+
   --background-1: rgb(0, 0, 0);
   --background-2: rgb(255, 255, 255);
   --background-3: rgb(60, 60, 60);
@@ -37,37 +42,37 @@
   --border-2: rgb(255, 255, 255);
   --color-1: rgb(0, 0, 0);
   --color-2: rgb(255, 255, 255);
-}
 
-body,
-p {
-  margin: 0;	
-}
-
-body {
-  background: var(--background-1);
-}
- 
-.button {
-  border-radius: 0.25rem;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  padding: 0.28125rem 0.5625rem;
-  text-decoration: none;
-
-  @media (min-width: 64rem) {
-    font-size: 1.125rem;
+  body,
+  p {
+    margin: 0;  
   }
 
-  &.primary {
-    background: var(--background-2);
-    border: 1px solid var(--border-1);
-    color: var(--color-1);
-  }
-
-  &.secondary {
+  body {
     background: var(--background-1);
-    border: 1px solid var(--border-2);
-    color: var(--color-2);
+  }
+
+  .button {
+    border-radius: 0.25rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    padding: 0.28125rem 0.5625rem;
+    text-decoration: none;
+  
+    @media (min-width: 64rem) {
+      font-size: 1.125rem;
+    }
+  
+    &.primary {
+      background: var(--background-2);
+      border: 1px solid var(--border-1);
+      color: var(--color-1);
+    }
+  
+    &.secondary {
+      background: var(--background-1);
+      border: 1px solid var(--border-2);
+      color: var(--color-2);
+    }
   }
 }
