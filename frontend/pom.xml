@@ -15,21 +15,29 @@
 		<artifactId>janilla-blank-template</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<configuration>
-					<executable>java</executable>
-					<arguments>
-						<argument>-p</argument>
-						<modulepath/>
-						<argument>-m</argument>
-						<argument>com.janilla.blanktemplate.frontend/com.janilla.blanktemplate.frontend.BlankFrontend</argument>
-					</arguments>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<properties>
+		<exec.mainClass>com.janilla.blanktemplate.frontend.BlankFrontend</exec.mainClass>
+	</properties>
+	<profiles>
+		<profile>
+			<id>execute</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<executable>java</executable>
+							<arguments>
+								<argument>-p</argument>
+								<modulepath/>
+								<argument>-m</argument>
+								<argument>com.janilla.blanktemplate.frontend/com.janilla.blanktemplate.frontend.BlankFrontend</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
