@@ -42,13 +42,17 @@ export default class App extends WebComponent {
             history.replaceState({}, "");
     }
 
-    get user() {
+    get currentPath() {
+        return location.pathname;
+    }
+
+    get currentUser() {
         return this.state.user;
     }
 
-    set user(user) {
-        this.state.user = user;
-        this.dispatchEvent(new CustomEvent("userchanged", { detail: user }));
+    set currentUser(currentUser) {
+        this.state.user = currentUser;
+        this.dispatchEvent(new CustomEvent("userchanged", { detail: currentUser }));
     }
 
     connectedCallback() {
@@ -80,14 +84,14 @@ export default class App extends WebComponent {
                 ? ss.user
                 : await (await fetch(`${this.dataset.apiUrl}/users/me`)).json();
 
-        const p = location.pathname;
+        const p = this.currentPath;
         const m = p.match(adminRegex);
         if (m) {
             this.appendChild(this.interpolateDom({
                 $template: "",
                 admin: {
                     $template: "admin",
-					user: s.user ? JSON.stringify(s.user) : null,
+                    user: this.currentUser ? JSON.stringify(this.currentUser) : null,
                     path: m[1] ?? "/"
                 }
             }));
@@ -96,9 +100,9 @@ export default class App extends WebComponent {
 
         this.appendChild(this.interpolateDom({
             $template: "",
-            public: s.notFound ? { $template: "not-found" } : {
+            site: s.notFound ? { $template: "not-found" } : {
                 $template: "page",
-                slug: location.pathname.split("/").map(x => x === "" ? "home" : x)[1]
+                slug: p.split("/").map(x => x === "" ? "home" : x)[1]
             }
         }));
     }
@@ -129,7 +133,7 @@ export default class App extends WebComponent {
     navigate(url) {
         delete this.serverState;
         delete this.state.notFound;
-        if (url.pathname !== location.pathname)
+        if (url.pathname !== this.currentPath)
             window.scrollTo(0, 0);
         history.pushState({}, "", url.pathname + url.search);
         this.requestDisplay();

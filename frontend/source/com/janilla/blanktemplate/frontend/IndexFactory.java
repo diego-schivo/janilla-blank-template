@@ -24,11 +24,15 @@
  */
 package com.janilla.blanktemplate.frontend;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 
+import com.janilla.blanktemplate.frontend.Index.Template;
 import com.janilla.cms.CmsFrontend;
 import com.janilla.frontend.Frontend;
 import com.janilla.frontend.resources.FrontendResources;
@@ -42,28 +46,47 @@ public class IndexFactory {
 	}
 
 	public Index index(FrontendExchange exchange) {
-		return new Index(imports(), configuration.getProperty("blank-template.api.url"), state(exchange));
+		return new Index(imports(), configuration.getProperty("blank-template.api.url"), state(exchange), templates());
 	}
 
 	protected Map<String, Object> state(FrontendExchange exchange) {
 		var x = new LinkedHashMap<String, Object>();
+		x.put("user", exchange.sessionUser());
 		return x;
 	}
 
 	protected Map<String, String> imports() {
 		class A {
-			private static Map<String, String> m;
+			private static Map<String, String> x;
 		}
-		if (A.m == null)
-			synchronized (this) {
-				if (A.m == null) {
-					A.m = new LinkedHashMap<String, String>();
-					Frontend.putImports(A.m);
-					FrontendResources.putImports(A.m);
-					CmsFrontend.putImports(A.m);
-					Stream.of("app", "not-found", "page").forEach(x -> A.m.put(x, "/" + x + ".js"));
+		if (A.x == null)
+			synchronized (A.class) {
+				if (A.x == null) {
+					A.x = new LinkedHashMap<String, String>();
+					Frontend.putImports(A.x);
+					FrontendResources.putImports(A.x);
+					CmsFrontend.putImports(A.x);
+					Stream.of("app", "not-found", "page").forEach(x -> A.x.put(x, "/" + x + ".js"));
 				}
 			}
-		return A.m;
+		return A.x;
+	}
+
+	protected List<Template> templates() {
+		class A {
+			private static List<Template> x;
+		}
+		if (A.x == null)
+			synchronized (A.class) {
+				if (A.x == null)
+					A.x = Stream.of("app", "not-found", "page").map(x -> {
+						try (var in = Index.class.getResourceAsStream(x + ".html")) {
+							return new Template(x, new String(in.readAllBytes()));
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					}).toList();
+			}
+		return A.x;
 	}
 }
