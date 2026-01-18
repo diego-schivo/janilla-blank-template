@@ -26,10 +26,10 @@ package com.janilla.blanktemplate.backend;
 
 import java.util.Collection;
 
-import com.janilla.cms.CmsPersistence;
+import com.janilla.backend.cms.CmsPersistence;
 import com.janilla.java.TypeResolver;
-import com.janilla.persistence.Entity;
-import com.janilla.sqlite.SqliteDatabase;
+import com.janilla.backend.persistence.Entity;
+import com.janilla.backend.sqlite.SqliteDatabase;
 
 public class CustomPersistence extends CmsPersistence {
 

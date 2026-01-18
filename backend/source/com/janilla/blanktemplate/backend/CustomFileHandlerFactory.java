@@ -27,7 +27,7 @@ package com.janilla.blanktemplate.backend;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import com.janilla.cms.CmsFileHandlerFactory;
+import com.janilla.backend.cms.CmsFileHandlerFactory;
 
 public class CustomFileHandlerFactory extends CmsFileHandlerFactory {
 

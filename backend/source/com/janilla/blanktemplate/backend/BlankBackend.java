@@ -40,7 +40,7 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.cms.Cms;
+import com.janilla.backend.cms.Cms;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
@@ -49,8 +49,8 @@ import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
 import com.janilla.java.TypeResolver;
 import com.janilla.net.Net;
-import com.janilla.persistence.ApplicationPersistenceBuilder;
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.persistence.ApplicationPersistenceBuilder;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Handle;
 import com.janilla.web.Invocable;

@@ -33,7 +33,7 @@ import java.util.Properties;
 import java.util.stream.Stream;
 
 import com.janilla.blanktemplate.frontend.Index.Template;
-import com.janilla.cms.CmsFrontend;
+import com.janilla.frontend.cms.CmsFrontend;
 import com.janilla.frontend.Frontend;
 import com.janilla.frontend.resources.FrontendResources;
 

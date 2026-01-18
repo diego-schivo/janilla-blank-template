@@ -24,7 +24,7 @@
  */
 package com.janilla.blanktemplate.backend;
 
-public enum UserRole implements com.janilla.cms.UserRole {
+public enum UserRole implements com.janilla.backend.cms.UserRole {
 
 	ADMIN
 }

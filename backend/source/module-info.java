@@ -28,5 +28,5 @@ module com.janilla.blanktemplate.backend {
 
 	opens com.janilla.blanktemplate.backend;
 
-	requires transitive com.janilla;
+	requires transitive com.janilla.backend;
 }

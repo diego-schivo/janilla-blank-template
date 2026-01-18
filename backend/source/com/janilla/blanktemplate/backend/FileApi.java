@@ -29,7 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import com.janilla.cms.Cms;
+import com.janilla.backend.cms.Cms;
 import com.janilla.http.HttpRequest;
 import com.janilla.web.Handle;
 

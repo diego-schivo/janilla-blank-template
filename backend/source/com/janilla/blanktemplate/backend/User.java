@@ -36,15 +36,15 @@ import java.util.Set;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import com.janilla.cms.DocumentStatus;
-import com.janilla.persistence.Index;
-import com.janilla.persistence.Store;
+import com.janilla.backend.cms.DocumentStatus;
+import com.janilla.backend.persistence.Index;
+import com.janilla.backend.persistence.Store;
 
 @Store
 public record User(Long id, String name, @Index String email, String salt, String hash,
 		@Index String resetPasswordToken, Instant resetPasswordExpiration, Set<UserRole> roles, Instant createdAt,
 		Instant updatedAt, DocumentStatus documentStatus, Instant publishedAt)
-		implements com.janilla.cms.User<Long, UserRole> {
+		implements com.janilla.backend.cms.User<Long, UserRole> {
 
 	private static final SecretKeyFactory SECRET;
 

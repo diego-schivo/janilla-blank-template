@@ -24,8 +24,8 @@
  */
 package com.janilla.blanktemplate.backend;
 
-import com.janilla.cms.CmsReflectionJsonIterator;
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.cms.CmsReflectionJsonIterator;
+import com.janilla.backend.persistence.Persistence;
 
 public class CustomReflectionJsonIterator extends CmsReflectionJsonIterator {
 

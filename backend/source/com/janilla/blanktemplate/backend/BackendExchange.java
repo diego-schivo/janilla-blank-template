@@ -31,13 +31,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.janilla.cms.UserHttpExchange;
+import com.janilla.backend.cms.UserHttpExchange;
 import com.janilla.http.HttpCookie;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.http.SimpleHttpExchange;
 import com.janilla.json.Jwt;
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.UnauthorizedException;
 
 public class BackendExchange extends SimpleHttpExchange implements UserHttpExchange {
