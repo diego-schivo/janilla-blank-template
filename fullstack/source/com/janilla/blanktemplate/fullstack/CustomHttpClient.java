@@ -24,18 +24,15 @@
  */
 package com.janilla.blanktemplate.fullstack;
 
-import java.util.Map;
-
-import com.janilla.blanktemplate.backend.BlankBackend;
 import com.janilla.http.DirectHttpClient;
-import com.janilla.http.HttpServer;
 import com.janilla.ioc.Context;
 
 @Context("frontend")
 public class CustomHttpClient extends DirectHttpClient {
 
 	public CustomHttpClient() {
-		var b = BlankBackend.INSTANCE.get();
-		super(b.diFactory().create(HttpServer.class, Map.of("handler", b.handler())));
+//		var b = BlankBackend.INSTANCE.get();
+//		super(b.diFactory().create(HttpServer.class, Map.of("handler", b.handler())));
+		super(null);
 	}
 }

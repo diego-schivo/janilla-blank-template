@@ -62,8 +62,7 @@
 	</developers>
 	<scm>
 		<connection>scm:git:git://github.com/diego-schivo/janilla-blank-template.git</connection>
-		<developerConnection>
-			scm:git:ssh://git@github.com/diego-schivo/janilla-blank-template.git</developerConnection>
+		<developerConnection>scm:git:ssh://git@github.com/diego-schivo/janilla-blank-template.git</developerConnection>
 		<url>https://github.com/diego-schivo/janilla-blank-template</url>
 		<tag>HEAD</tag>
 	</scm>

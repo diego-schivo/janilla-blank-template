@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -43,18 +42,15 @@ import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
-import com.janilla.net.Net;
+import com.janilla.net.SecureServer;
 
 public class BlankFullstack {
-
-	public static final AtomicReference<BlankFullstack> INSTANCE = new AtomicReference<>();
 
 	public static void main(String[] args) {
 		try {
 			BlankFullstack a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName()), INSTANCE::get,
-						"fullstack");
+				var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName()), "fullstack");
 				a = f.create(BlankFullstack.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -66,8 +62,8 @@ public class BlankFullstack {
 			HttpServer s;
 			{
 				SSLContext c;
-				try (var x = Net.class.getResourceAsStream("localhost")) {
-					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
+				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
+					c = Java.sslContext(x, "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("blank-template.fullstack.server.port"));
 				s = a.diFactory.create(HttpServer.class,
@@ -91,8 +87,7 @@ public class BlankFullstack {
 
 	public BlankFullstack(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
-		if (!INSTANCE.compareAndSet(null, this))
-			throw new IllegalStateException();
+		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 
 		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
@@ -102,29 +97,23 @@ public class BlankFullstack {
 				throw new RuntimeException(e);
 			}
 		});
-		backend = diFactory
-				.create(BlankBackend.class,
-						Java.hashMap("diFactory",
-								new DiFactory(
-										Stream.concat(
-												Stream.of("fullstack", "backend")
-														.map(x -> BlankBackend.class.getPackageName()
-																.replace(".backend", "." + x)),
-												Stream.of("com.janilla.web"))
-												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
-										BlankBackend.INSTANCE::get, "backend"),
-								"configurationFile", cf));
+		backend = diFactory.create(BlankBackend.class,
+				Java.hashMap("diFactory",
+						new DiFactory(Stream
+								.concat(Stream.of("com.janilla.web"),
+										Stream.of("backend", "fullstack").map(
+												x -> BlankBackend.class.getPackageName().replace(".backend", "." + x)))
+								.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), "backend"),
+						"configurationFile", cf));
 		frontend = diFactory
 				.create(BlankFrontend.class,
 						Java.hashMap("diFactory",
-								new DiFactory(
-										Stream.concat(
-												Stream.of("fullstack", "frontend")
+								new DiFactory(Stream
+										.concat(Stream.of("com.janilla.web"),
+												Stream.of("frontend", "fullstack")
 														.map(x -> BlankFrontend.class.getPackageName()
-																.replace(".frontend", "." + x)),
-												Stream.of("com.janilla.web"))
-												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
-										BlankFrontend.INSTANCE::get, "frontend"),
+																.replace(".frontend", "." + x)))
+										.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), "frontend"),
 								"configurationFile", cf));
 
 		handler = x -> {

@@ -33,8 +33,8 @@ import java.util.Properties;
 import java.util.stream.Stream;
 
 import com.janilla.blanktemplate.frontend.Index.Template;
-import com.janilla.frontend.cms.CmsFrontend;
-import com.janilla.frontend.Frontend;
+import com.janilla.frontend.cms.CmsImportMaps;
+import com.janilla.frontend.ImportMaps;
 import com.janilla.frontend.resources.FrontendResources;
 
 public class IndexFactory {
@@ -63,9 +63,9 @@ public class IndexFactory {
 			synchronized (A.class) {
 				if (A.x == null) {
 					A.x = new LinkedHashMap<String, String>();
-					Frontend.putImports(A.x);
+					ImportMaps.putImports(A.x);
 					FrontendResources.putImports(A.x);
-					CmsFrontend.putImports(A.x);
+					CmsImportMaps.putImports(A.x);
 					Stream.of("app", "not-found", "page").forEach(x -> A.x.put(x, "/" + x + ".js"));
 				}
 			}

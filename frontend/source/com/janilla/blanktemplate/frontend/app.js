@@ -47,11 +47,11 @@ export default class App extends WebComponent {
     }
 
     get currentUser() {
-        return this.state.user;
+        return this.customState.user;
     }
 
     set currentUser(currentUser) {
-        this.state.user = currentUser;
+        this.customState.user = currentUser;
         this.dispatchEvent(new CustomEvent("userchanged", { detail: currentUser }));
     }
 
@@ -73,7 +73,7 @@ export default class App extends WebComponent {
     }
 
     async updateDisplay() {
-        const s = this.state;
+        const s = this.customState;
         const ss = this.serverState;
 
         if (ss?.error?.code === 404)
@@ -126,13 +126,13 @@ export default class App extends WebComponent {
         // console.log("handlePopState", JSON.stringify(history.state));
         delete this.serverState;
         window.scrollTo(0, 0);
-        delete this.state.notFound;
+        delete this.customState.notFound;
         this.requestDisplay();
     }
 
     navigate(url) {
         delete this.serverState;
-        delete this.state.notFound;
+        delete this.customState.notFound;
         if (url.pathname !== this.currentPath)
             window.scrollTo(0, 0);
         history.pushState({}, "", url.pathname + url.search);
@@ -158,7 +158,7 @@ export default class App extends WebComponent {
     }
 
     notFound() {
-        this.state.notFound = true;
+        this.customState.notFound = true;
         this.requestDisplay();
     }
 }

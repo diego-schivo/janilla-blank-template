@@ -30,7 +30,7 @@ import java.util.Properties;
 
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpCookie;
-import com.janilla.net.UriQueryBuilder;
+import com.janilla.java.UriQueryBuilder;
 
 public class DataFetching {
 
