@@ -38,26 +38,28 @@ import com.janilla.http.SimpleHttpExchange;
 import com.janilla.json.Jwt;
 import com.janilla.web.UnauthorizedException;
 
-public class FrontendExchange extends SimpleHttpExchange {
-
-	private static final String SESSION_COOKIE = "blank-token";
+public class BlankFrontendHttpExchange extends SimpleHttpExchange {
 
 	protected final Properties configuration;
 
-	protected final DataFetching dataFetching;
+	protected final String configurationKey;
+
+	protected final BlankDataFetching dataFetching;
 
 	protected final Map<String, Object> session = new HashMap<>();
 
-	public FrontendExchange(HttpRequest request, HttpResponse response, Properties configuration,
-			DataFetching dataFetching) {
+	public BlankFrontendHttpExchange(HttpRequest request, HttpResponse response, Properties configuration,
+			String configurationKey, BlankDataFetching dataFetching) {
 		super(request, response);
 		this.configuration = configuration;
+		this.configurationKey = configurationKey;
 		this.dataFetching = dataFetching;
 	}
 
 	public HttpCookie tokenCookie() {
-		return request.getHeaderValues("cookie").map(HttpCookie::parse).filter(x -> x.name().equals(SESSION_COOKIE))
-				.findFirst().orElse(null);
+		var c = configuration.getProperty(configurationKey + ".jwt.cookie");
+		return request.getHeaderValues("cookie").map(HttpCookie::parse).filter(x -> x.name().equals(c)).findFirst()
+				.orElse(null);
 	}
 
 	public String sessionEmail() {
@@ -65,7 +67,7 @@ public class FrontendExchange extends SimpleHttpExchange {
 			var t = tokenCookie();
 			Map<String, ?> p;
 			try {
-				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty("blank-template.jwt.key"))
+				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty(configurationKey + ".jwt.key"))
 						: null;
 			} catch (IllegalArgumentException e) {
 				p = null;
@@ -89,8 +91,9 @@ public class FrontendExchange extends SimpleHttpExchange {
 	}
 
 	public void setSessionCookie(String value) {
+		var c = configuration.getProperty(configurationKey + ".jwt.cookie");
 		response().setHeaderValue("set-cookie",
-				HttpCookie.of(SESSION_COOKIE, value).withPath("/").withHttpOnly(true).withSameSite("Lax")
+				HttpCookie.of(c, value).withPath("/").withHttpOnly(true).withSameSite("Lax")
 						.withExpires(value != null && !value.isEmpty() ? ZonedDateTime.now(ZoneOffset.UTC).plusHours(2)
 								: ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
 						.format());

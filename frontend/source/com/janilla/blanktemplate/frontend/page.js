@@ -34,10 +34,6 @@ export default class Page extends WebComponent {
         return ["data-slug"];
     }
 
-    constructor() {
-        super();
-    }
-
     async updateDisplay() {
         const a = this.closest("app-element");
         if (this.dataset.slug === "home")

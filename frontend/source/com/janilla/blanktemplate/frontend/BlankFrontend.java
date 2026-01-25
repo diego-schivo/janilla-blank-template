@@ -31,7 +31,6 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +74,7 @@ public class BlankFrontend {
 				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
 					c = Java.sslContext(x, "passphrase".toCharArray());
 				}
-				var p = Integer.parseInt(a.configuration.getProperty("blank-template.frontend.server.port"));
+				var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".frontend.server.port"));
 				s = a.diFactory.create(HttpServer.class,
 						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
@@ -87,24 +86,31 @@ public class BlankFrontend {
 
 	protected final Properties configuration;
 
-	protected final DataFetching dataFetching;
+	protected final String configurationKey;
+
+	protected final BlankDataFetching dataFetching;
 
 	protected final DiFactory diFactory;
-
-	protected final ResourceMap resourceMap;
 
 	protected final HttpHandler handler;
 
 	protected final HttpClient httpClient;
 
-	protected final IndexFactory indexFactory;
+	protected final BlankIndexFactory indexFactory;
 
 	protected final List<Invocable> invocables;
 
 	protected final RenderableFactory renderableFactory;
 
+	protected final ResourceMap resourceMap;
+
 	public BlankFrontend(DiFactory diFactory, Path configurationFile) {
+		this(diFactory, configurationFile, "blank-template");
+	}
+
+	public BlankFrontend(DiFactory diFactory, Path configurationFile, String configurationKey) {
 		this.diFactory = diFactory;
+		this.configurationKey = configurationKey;
 		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 
@@ -117,14 +123,12 @@ public class BlankFrontend {
 			}
 			httpClient = diFactory.create(HttpClient.class, Map.of("sslContext", c));
 		}
-		dataFetching = diFactory.create(DataFetching.class);
+		dataFetching = diFactory.create(BlankDataFetching.class);
 
-		resourceMap = diFactory.create(ResourceMap.class,
-				Map.of("paths", Stream.of("com.janilla.frontend", BlankFrontend.class.getPackageName())
-						.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList()));
-		indexFactory = diFactory.create(IndexFactory.class);
+		resourceMap = diFactory.create(ResourceMap.class, Map.of("paths", resourcePaths()));
+		indexFactory = diFactory.create(BlankIndexFactory.class);
 
-		invocables = types().stream()
+		invocables = diFactory.types().stream()
 				.flatMap(x -> Arrays.stream(x.getMethods())
 						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
 						.map(y -> new Invocable(x, y)))
@@ -145,16 +149,16 @@ public class BlankFrontend {
 		return configuration;
 	}
 
-	public DataFetching dataFetching() {
+	public String configurationKey() {
+		return configurationKey;
+	}
+
+	public BlankDataFetching dataFetching() {
 		return dataFetching;
 	}
 
 	public DiFactory diFactory() {
 		return diFactory;
-	}
-
-	public ResourceMap resourceMap() {
-		return resourceMap;
 	}
 
 	public HttpHandler handler() {
@@ -165,7 +169,7 @@ public class BlankFrontend {
 		return httpClient;
 	}
 
-	public IndexFactory indexFactory() {
+	public BlankIndexFactory indexFactory() {
 		return indexFactory;
 	}
 
@@ -177,7 +181,12 @@ public class BlankFrontend {
 		return renderableFactory;
 	}
 
-	public Collection<Class<?>> types() {
-		return diFactory.types();
+	public ResourceMap resourceMap() {
+		return resourceMap;
+	}
+
+	protected List<Path> resourcePaths() {
+		return Stream.of("com.janilla.frontend", BlankFrontend.class.getPackageName())
+				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
 	}
 }

@@ -22,17 +22,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.fullstack;
+:root:not(:has(.admin)) {
+  color-scheme: light dark;
 
-import com.janilla.http.DirectHttpClient;
-import com.janilla.ioc.Context;
+  &:has([data-color-scheme="light"]) {
+    color-scheme: light;
+  }
 
-@Context("frontend")
-public class CustomHttpClient extends DirectHttpClient {
+  &:has([data-color-scheme="dark"]) {
+    color-scheme: dark;
+  }
+}
 
-	public CustomHttpClient() {
-//		var b = BlankBackend.INSTANCE.get();
-//		super(b.diFactory().create(HttpServer.class, Map.of("handler", b.handler())));
-		super(null);
-	}
+:where(:root:not(:has(.admin)), :host:not(:has(.admin))) {
+  line-height: 1.5;
+  text-size-adjust: 100%;
+
+  body {
+    background: light-dark(rgb(255, 255, 255), rgb(0, 0, 0));
+    margin: 0;
+  }
+
+  :where(.button) {
+    border-radius: 0.25rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    padding: 0.28125rem 0.5625rem;
+    text-decoration: none;
+
+    @media (min-width: 64rem) {
+      font-size: 1.125rem;
+    }
+
+    &.primary {
+      background: rgb(255, 255, 255);
+      border: 1px solid rgb(0, 0, 0);
+      color: rgb(0, 0, 0);
+    }
+
+    &.secondary {
+      background: rgb(0, 0, 0);
+      border: 1px solid rgb(255, 255, 255);
+      color: rgb(255, 255, 255);
+    }
+  }
 }

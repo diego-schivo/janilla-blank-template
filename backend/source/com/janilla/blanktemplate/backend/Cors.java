@@ -25,7 +25,6 @@
 package com.janilla.blanktemplate.backend;
 
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
@@ -35,20 +34,24 @@ public class Cors {
 
 	protected final Properties configuration;
 
-	public Cors(Properties configuration) {
+	protected final String configurationKey;
+
+	public Cors(Properties configuration, String configurationKey) {
 		this.configuration = configuration;
+		this.configurationKey = configurationKey;
 	}
 
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
-		var o = configuration.getProperty("blank-template.api.cors.origin");
-		var m = CustomInvocationHandlerFactory.INSTANCE.get().handleMethods(request.getPath());
-		var h = configuration.getProperty("blank-template.api.cors.headers");
-
-		response.setStatus(204);
-		response.setHeaderValue("access-control-allow-origin", o);
-		response.setHeaderValue("access-control-allow-methods",
-				m.contains(null) ? "*" : m.stream().collect(Collectors.joining(", ")));
-		response.setHeaderValue("access-control-allow-headers", h);
+//		var o = configuration.getProperty(configurationKey + ".api.cors.origin");
+//		var m = CustomInvocationHandlerFactory.INSTANCE.get().handleMethods(request.getPath());
+//		var h = configuration.getProperty(configurationKey + ".api.cors.headers");
+//
+//		response.setStatus(204);
+//		response.setHeaderValue("access-control-allow-origin", o);
+//		response.setHeaderValue("access-control-allow-methods",
+//				m.contains(null) ? "*" : m.stream().collect(Collectors.joining(", ")));
+//		response.setHeaderValue("access-control-allow-headers", h);
+		throw new RuntimeException();
 	}
 }

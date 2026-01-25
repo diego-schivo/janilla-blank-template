@@ -40,13 +40,13 @@ import com.janilla.ioc.Context;
 import com.janilla.ioc.DiFactory;
 
 @Context("fullstack")
-public class CustomHttpServer extends HttpServer {
+public class BlankHttpServer extends HttpServer {
 
 	protected final BlankBackend backend;
 
 	protected final BlankFrontend frontend;
 
-	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler, DiFactory diFactory,
+	public BlankHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler, DiFactory diFactory,
 			BlankBackend backend, BlankFrontend frontend) {
 		super(sslContext, endpoint, handler, diFactory);
 		this.backend = backend;
@@ -55,7 +55,7 @@ public class CustomHttpServer extends HttpServer {
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
-//		IO.println("CustomHttpServer.createExchange, request.getPath()=" + request.getPath());
+//		IO.println("BlankHttpServer.createExchange, request.getPath()=" + request.getPath());
 		var f = request.getPath().startsWith("/api/") ? backend.diFactory() : frontend.diFactory();
 		var x = f.create(HttpExchange.class, Map.of("request", request, "response", response));
 		return x != null ? x : super.createExchange(request, response);

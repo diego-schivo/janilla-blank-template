@@ -31,39 +31,43 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.janilla.backend.cms.User;
 import com.janilla.backend.cms.UserHttpExchange;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpCookie;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.http.SimpleHttpExchange;
 import com.janilla.json.Jwt;
-import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.UnauthorizedException;
 
-public class BackendExchange extends SimpleHttpExchange implements UserHttpExchange {
-
-	private static final String SESSION_COOKIE = "blank-token";
+public class BlankBackendHttpExchange extends SimpleHttpExchange implements UserHttpExchange {
 
 	protected final Properties configuration;
+
+	protected final String configurationKey;
 
 	protected final Persistence persistence;
 
 	protected final Map<String, Object> session = new HashMap<>();
 
-	public BackendExchange(HttpRequest request, HttpResponse response, Properties configuration,
-			Persistence persistence) {
+	public BlankBackendHttpExchange(HttpRequest request, HttpResponse response, Properties configuration,
+			String configurationKey, Persistence persistence) {
 		super(request, response);
 		this.configuration = configuration;
+		this.configurationKey = configurationKey;
 		this.persistence = persistence;
 	}
 
 	public String sessionEmail() {
 		if (!session.containsKey("sessionEmail")) {
 			var t = request().getHeaderValues("cookie").map(HttpCookie::parse)
-					.filter(x -> x.name().equals(SESSION_COOKIE)).findFirst().orElse(null);
+					.filter(x -> x.name().equals(configuration.getProperty(configurationKey + ".jwt.cookie")))
+					.findFirst().orElse(null);
 			Map<String, ?> p;
 			try {
-				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty("blank-template.jwt.key")) : null;
+				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty(configurationKey + ".jwt.key"))
+						: null;
 			} catch (IllegalArgumentException e) {
 				p = null;
 			}
@@ -73,13 +77,13 @@ public class BackendExchange extends SimpleHttpExchange implements UserHttpExcha
 	}
 
 	@Override
-	public User sessionUser() {
+	public User<?, ?> sessionUser() {
 		if (!session.containsKey("sessionUser")) {
 			var e = sessionEmail();
-			var c = persistence.crud(User.class);
+			var c = persistence.crud(BlankUser.class);
 			session.put("sessionUser", e != null ? c.read(c.find("email", e)) : null);
 		}
-		return (User) session.get("sessionUser");
+		return (User<?, ?>) session.get("sessionUser");
 	}
 
 	public void requireSessionEmail() {
@@ -90,7 +94,8 @@ public class BackendExchange extends SimpleHttpExchange implements UserHttpExcha
 	@Override
 	public void setSessionCookie(String value) {
 		response().setHeaderValue("set-cookie",
-				HttpCookie.of(SESSION_COOKIE, value).withPath("/").withHttpOnly(true).withSameSite("Lax")
+				HttpCookie.of(configuration.getProperty(configurationKey + ".jwt.cookie"), value).withPath("/")
+						.withHttpOnly(true).withSameSite("Lax")
 						.withExpires(value != null && !value.isEmpty() ? ZonedDateTime.now(ZoneOffset.UTC).plusHours(2)
 								: ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
 						.format());

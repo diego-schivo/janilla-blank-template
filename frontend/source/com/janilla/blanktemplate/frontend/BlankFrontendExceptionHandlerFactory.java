@@ -22,5 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-app-element {
+package com.janilla.blanktemplate.frontend;
+
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandlerFactory;
+import com.janilla.web.Error;
+import com.janilla.web.ExceptionHandlerFactory;
+import com.janilla.web.RenderableFactory;
+
+public class BlankFrontendExceptionHandlerFactory extends ExceptionHandlerFactory {
+
+	protected final BlankIndexFactory indexFactory;
+
+	protected final RenderableFactory renderableFactory;
+
+	protected final HttpHandlerFactory rootFactory;
+
+	public BlankFrontendExceptionHandlerFactory(BlankIndexFactory indexFactory, RenderableFactory renderableFactory,
+			HttpHandlerFactory rootFactory) {
+		this.indexFactory = indexFactory;
+		this.renderableFactory = renderableFactory;
+		this.rootFactory = rootFactory;
+	}
+
+	@Override
+	protected boolean handle(Error error, HttpExchange exchange) {
+//		IO.println(
+//				"CustomExceptionHandlerFactory.handle, " + exchange.request().getPath() + ", " + exchange.exception());
+		super.handle(error, exchange);
+		var i = indexFactory.index((BlankFrontendHttpExchange) exchange);
+		i.state().put("error", error);
+		var r = renderableFactory.createRenderable(null, i);
+		var h = rootFactory.createHandler(r);
+		return h.handle(exchange);
+	}
 }

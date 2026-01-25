@@ -24,10 +24,14 @@
  */
 package com.janilla.blanktemplate.fullstack;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -35,49 +39,68 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.blanktemplate.backend.BackendExchange;
+import com.janilla.blanktemplate.backend.BlankBackendHttpExchange;
 import com.janilla.blanktemplate.backend.BlankBackend;
 import com.janilla.blanktemplate.frontend.BlankFrontend;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
-import com.janilla.net.SecureServer;
 
 public class BlankFullstack {
 
-	public static void main(String[] args) {
-		try {
-			BlankFullstack a;
-			{
-				var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName()), "fullstack");
-				a = f.create(BlankFullstack.class,
-						Java.hashMap("diFactory", f, "configurationFile",
-								args.length > 0 ? Path.of(
-										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
-												: args[0])
-										: null));
-			}
+	public static final ScopedValue<BlankFullstack> INSTANCE = ScopedValue.newInstance();
 
-			HttpServer s;
-			{
-				SSLContext c;
-				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
-					c = Java.sslContext(x, "passphrase".toCharArray());
-				}
-				var p = Integer.parseInt(a.configuration.getProperty("blank-template.fullstack.server.port"));
-				s = a.diFactory.create(HttpServer.class,
-						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
-			}
-			s.serve();
-		} catch (Throwable e) {
-			e.printStackTrace();
+	public static void main(String[] args) {
+		IO.println(ProcessHandle.current().pid());
+		var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName()), "fullstack");
+		serve(f, BlankFullstack.class, args.length > 0 ? args[0] : null);
+	}
+
+	protected static <T extends BlankFullstack> void serve(DiFactory diFactory, Class<T> applicationType,
+			String configurationPath) {
+		T a;
+		{
+			a = diFactory.create(applicationType,
+					Java.hashMap("diFactory", diFactory, "configurationFile",
+							configurationPath != null ? Path.of(configurationPath.startsWith("~")
+									? System.getProperty("user.home") + configurationPath.substring(1)
+									: configurationPath) : null));
 		}
+
+		SSLContext c;
+		{
+			var p = a.configuration.getProperty(a.configurationKey() + ".fullstack.server.keystore.path");
+			var w = a.configuration.getProperty(a.configurationKey() + ".fullstack.server.keystore.password");
+			if (p.startsWith("~"))
+				p = System.getProperty("user.home") + p.substring(1);
+			var f = Path.of(p);
+			if (!Files.exists(f))
+				Java.generateKeyPair(f, w);
+			try (var s = Files.newInputStream(f)) {
+				c = Java.sslContext(s, w.toCharArray());
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}
+
+		HttpServer s;
+		{
+			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".fullstack.server.port"));
+			s = a.diFactory.create(HttpServer.class,
+					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
+		}
+		s.serve();
 	}
 
 	protected final BlankBackend backend;
 
 	protected final Properties configuration;
+
+	protected final Path configurationFile;
+
+	protected final String configurationKey;
 
 	protected final DiFactory diFactory;
 
@@ -86,40 +109,35 @@ public class BlankFullstack {
 	protected final HttpHandler handler;
 
 	public BlankFullstack(DiFactory diFactory, Path configurationFile) {
+		this(diFactory, configurationFile, "blank-template");
+	}
+
+	public BlankFullstack(DiFactory diFactory, Path configurationFile, String configurationKey) {
 		this.diFactory = diFactory;
+		this.configurationFile = configurationFile;
+		this.configurationKey = configurationKey;
 		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 
 		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
 			try {
-				return Path.of(BlankFullstack.class.getResource("configuration.properties").toURI());
+				return Path.of(getClass().getResource("configuration.properties").toURI());
 			} catch (URISyntaxException e) {
 				throw new RuntimeException(e);
 			}
 		});
-		backend = diFactory.create(BlankBackend.class,
-				Java.hashMap("diFactory",
-						new DiFactory(Stream
-								.concat(Stream.of("com.janilla.web"),
-										Stream.of("backend", "fullstack").map(
-												x -> BlankBackend.class.getPackageName().replace(".backend", "." + x)))
-								.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), "backend"),
-						"configurationFile", cf));
-		frontend = diFactory
-				.create(BlankFrontend.class,
-						Java.hashMap("diFactory",
-								new DiFactory(Stream
-										.concat(Stream.of("com.janilla.web"),
-												Stream.of("frontend", "fullstack")
-														.map(x -> BlankFrontend.class.getPackageName()
-																.replace(".frontend", "." + x)))
-										.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), "frontend"),
-								"configurationFile", cf));
+		backend = ScopedValue.where(INSTANCE, this).call(() -> {
+			var f = new DiFactory(backendTypes(), "backend");
+			return f.create(BlankBackend.class,
+					Java.hashMap("diFactory", f, "configurationFile", cf, "configurationKey", configurationKey));
+		});
+		frontend = ScopedValue.where(INSTANCE, this).call(() -> {
+			var f = new DiFactory(frontendTypes(), "frontend");
+			return f.create(BlankFrontend.class,
+					Java.hashMap("diFactory", f, "configurationFile", cf, "configurationKey", configurationKey));
+		});
 
-		handler = x -> {
-			var h = x instanceof BackendExchange ? backend.handler() : frontend.handler();
-			return h.handle(x);
-		};
+		handler = this::handle;
 	}
 
 	public BlankBackend backend() {
@@ -128,6 +146,10 @@ public class BlankFullstack {
 
 	public Properties configuration() {
 		return configuration;
+	}
+
+	public String configurationKey() {
+		return configurationKey;
 	}
 
 	public DiFactory diFactory() {
@@ -140,5 +162,22 @@ public class BlankFullstack {
 
 	public HttpHandler handler() {
 		return handler;
+	}
+
+	protected List<Class<?>> backendTypes() {
+		return Stream
+				.of("com.janilla.web", "com.janilla.backend.cms", BlankBackend.class.getPackageName(),
+						BlankFullstack.class.getPackageName())
+				.flatMap(x -> Java.getPackageClasses(x).stream()).toList();
+	}
+
+	protected List<Class<?>> frontendTypes() {
+		return Stream.of("com.janilla.web", BlankFrontend.class.getPackageName(), BlankFullstack.class.getPackageName())
+				.flatMap(x -> Java.getPackageClasses(x).stream()).toList();
+	}
+
+	protected boolean handle(HttpExchange exchange) {
+		var h = exchange instanceof BlankBackendHttpExchange ? backend.handler() : frontend.handler();
+		return h.handle(exchange);
 	}
 }

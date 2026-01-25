@@ -22,30 +22,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate.frontend;
+
+import java.net.URI;
+import java.util.List;
 
 import com.janilla.http.HttpExchange;
-import com.janilla.http.HttpHandlerFactory;
-import com.janilla.web.Error;
-import com.janilla.web.ExceptionHandlerFactory;
-import com.janilla.web.RenderableFactory;
+import com.janilla.web.Handle;
 
-public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
+public class BlankWebHandling {
 
-	protected final RenderableFactory renderableFactory;
+	protected final BlankDataFetching dataFetching;
 
-	protected final HttpHandlerFactory rootFactory;
+	protected final BlankIndexFactory indexFactory;
 
-	public CustomExceptionHandlerFactory(RenderableFactory renderableFactory, HttpHandlerFactory rootFactory) {
-		this.renderableFactory = renderableFactory;
-		this.rootFactory = rootFactory;
+	public BlankWebHandling(BlankDataFetching dataFetching, BlankIndexFactory indexFactory) {
+		this.dataFetching = dataFetching;
+		this.indexFactory = indexFactory;
 	}
 
-	@Override
-	protected boolean handle(Error error, HttpExchange exchange) {
-		super.handle(error, exchange);
-		var r = renderableFactory.createRenderable(null, exchange.exception().getMessage());
-		var h = rootFactory.createHandler(r);
-		return h.handle(exchange);
+	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
+	public Object admin(String path, HttpExchange exchange) {
+//		IO.println("WebHandling.admin, path=" + path);
+		if (path == null || path.isEmpty())
+			path = "/";
+		switch (path) {
+		case "/":
+			if (((BlankFrontendHttpExchange) exchange).sessionUser() == null)
+				return URI.create("/admin/login");
+			break;
+		case "/login":
+			if (((List<?>) dataFetching.users(0l, 1l)).isEmpty())
+				return URI.create("/admin/create-first-user");
+			break;
+		}
+		return indexFactory.index(exchange);
+	}
+
+	@Handle(method = "GET", path = "/")
+	public Object page(HttpExchange exchange) {
+//		IO.println("WebHandling.page");
+		return indexFactory.index(exchange);
 	}
 }

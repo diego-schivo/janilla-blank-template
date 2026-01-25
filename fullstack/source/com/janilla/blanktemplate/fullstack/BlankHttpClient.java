@@ -22,19 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate.fullstack;
 
-import java.util.List;
+import java.util.Map;
 
-import com.janilla.backend.cms.CmsPersistence;
-import com.janilla.backend.persistence.Entity;
-import com.janilla.backend.sqlite.SqliteDatabase;
-import com.janilla.java.TypeResolver;
+import com.janilla.http.DirectHttpClient;
+import com.janilla.http.HttpServer;
+import com.janilla.ioc.Context;
 
-public class CustomPersistence extends CmsPersistence {
+@Context("frontend")
+public class BlankHttpClient extends DirectHttpClient {
 
-	public CustomPersistence(SqliteDatabase database, List<Class<? extends Entity<?>>> storables,
-			TypeResolver typeResolver) {
-		super(database, storables, typeResolver);
+	public BlankHttpClient() {
+		var b = BlankFullstack.INSTANCE.get().backend();
+		super(b.diFactory().create(HttpServer.class, Map.of("handler", b.handler())));
 	}
 }

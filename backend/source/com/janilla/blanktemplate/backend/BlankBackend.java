@@ -28,13 +28,14 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -42,6 +43,7 @@ import javax.net.ssl.SSLContext;
 import com.janilla.backend.cms.Cms;
 import com.janilla.backend.persistence.ApplicationPersistenceBuilder;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.backend.persistence.Store;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
@@ -57,6 +59,8 @@ import com.janilla.web.NotFoundException;
 import com.janilla.web.RenderableFactory;
 
 public class BlankBackend {
+
+	public static final ScopedValue<BlankBackend> INSTANCE = ScopedValue.newInstance();
 
 	public static void main(String[] args) {
 		try {
@@ -90,10 +94,9 @@ public class BlankBackend {
 
 	protected final Properties configuration;
 
-	protected final Predicate<HttpExchange> drafts = x -> {
-		var u = x instanceof BackendExchange y ? y.sessionUser() : null;
-		return u != null;
-	};
+	protected final String configurationKey;
+
+	protected final Predicate<HttpExchange> drafts = this::testDrafts;
 
 	protected final DiFactory diFactory;
 
@@ -105,23 +108,39 @@ public class BlankBackend {
 
 	protected final RenderableFactory renderableFactory;
 
+	protected final List<Class<?>> resolvables;
+
+	protected final List<Class<?>> storables;
+
 	protected final TypeResolver typeResolver;
 
 	public BlankBackend(DiFactory diFactory, Path configurationFile) {
+		this(diFactory, configurationFile, "blank-template");
+	}
+
+	public BlankBackend(DiFactory diFactory, Path configurationFile, String configurationKey) {
 		this.diFactory = diFactory;
+		this.configurationKey = configurationKey;
 		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
-		typeResolver = diFactory.create(DollarTypeResolver.class);
 
 		{
-			var f = configuration.getProperty("blank-template.database.file");
+			Map<String, Class<?>> m = diFactory.types().stream()
+					.collect(Collectors.toMap(x -> x.getSimpleName(), x -> x, (_, x) -> x, LinkedHashMap::new));
+			resolvables = m.values().stream().toList();
+		}
+		typeResolver = diFactory.create(DollarTypeResolver.class);
+
+		storables = resolvables.stream().filter(x -> x.isAnnotationPresent(Store.class)).toList();
+		{
+			var f = configuration.getProperty(configurationKey + ".database.file");
 			if (f.startsWith("~"))
 				f = System.getProperty("user.home") + f.substring(1);
 			var b = diFactory.create(ApplicationPersistenceBuilder.class, Map.of("databaseFile", Path.of(f)));
 			persistence = b.build();
 		}
 
-		invocables = types().stream()
+		invocables = diFactory.types().stream()
 				.flatMap(x -> Arrays.stream(x.getMethods())
 						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
 						.map(y -> new Invocable(x, y)))
@@ -129,17 +148,21 @@ public class BlankBackend {
 		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);
-			handler = x -> {
+			handler = x -> ScopedValue.where(INSTANCE, this).call(() -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)
 					throw new NotFoundException(x.request().getMethod() + " " + x.request().getTarget());
 				return h.handle(x);
-			};
+			});
 		}
 	}
 
 	public Properties configuration() {
 		return configuration;
+	}
+
+	public String configurationKey() {
+		return configurationKey;
 	}
 
 	public Predicate<HttpExchange> drafts() {
@@ -166,16 +189,29 @@ public class BlankBackend {
 		return renderableFactory;
 	}
 
+	public List<Class<?>> resolvables() {
+		return resolvables;
+	}
+
+	public List<Class<?>> storables() {
+		return storables;
+	}
+
 	public TypeResolver typeResolver() {
 		return typeResolver;
 	}
 
-	public Collection<Class<?>> types() {
-		return diFactory.types();
-	}
-
 	@Handle(method = "GET", path = "/api/schema")
 	public Map<String, Map<String, Map<String, Object>>> schema() {
-		return Cms.schema(Data.class, diFactory);
+		return Cms.schema(dataClass(), diFactory);
+	}
+
+	protected Class<?> dataClass() {
+		return Data.class;
+	}
+
+	protected boolean testDrafts(HttpExchange x) {
+		var u = x instanceof BlankBackendHttpExchange y ? y.sessionUser() : null;
+		return u != null;
 	}
 }

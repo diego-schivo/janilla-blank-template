@@ -22,34 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.frontend;
+package com.janilla.blanktemplate.backend;
 
-import java.net.URI;
-import java.util.List;
-import java.util.Properties;
+import com.janilla.backend.cms.UserRole;
 
-import com.janilla.http.HttpClient;
-import com.janilla.http.HttpCookie;
-import com.janilla.java.UriQueryBuilder;
+public enum BlankUserRole implements UserRole {
 
-public class DataFetching {
-
-	protected final String apiUrl;
-
-	protected final HttpClient httpClient;
-
-	public DataFetching(Properties configuration, HttpClient httpClient) {
-		apiUrl = configuration.getProperty("blank-template.api.url");
-		this.httpClient = httpClient;
-	}
-
-	public Object sessionUser(HttpCookie token) {
-		return httpClient.getJson(URI.create(apiUrl + "/users/me"), token != null ? token.format() : null);
-	}
-
-	public List<?> users(Long skip, Long limit) {
-		return (List<?>) httpClient.getJson(URI
-				.create(apiUrl + "/users?" + new UriQueryBuilder().append("skip", skip != null ? skip.toString() : null)
-						.append("limit", limit != null ? limit.toString() : null)));
-	}
+	ADMIN
 }

@@ -24,31 +24,17 @@
  */
 package com.janilla.blanktemplate.backend;
 
+import java.nio.file.Path;
 import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 
-import com.janilla.backend.cms.UserHttpExchange;
-import com.janilla.http.HttpExchange;
-import com.janilla.backend.persistence.Persistence;
-import com.janilla.web.Handle;
+import com.janilla.backend.cms.CmsFileHandlerFactory;
 
-@Handle(path = "/api/users")
-public class UserApi extends com.janilla.backend.cms.UserApi<Long, UserRole, User> {
+public class BlankBackendFileHandlerFactory extends CmsFileHandlerFactory {
 
-	public static final AtomicReference<UserApi> INSTANCE = new AtomicReference<>();
-
-	public UserApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration) {
-		super(User.class, drafts, persistence, configuration.getProperty("blank-template.jwt.key"));
-		if (!INSTANCE.compareAndSet(null, this))
-			throw new IllegalStateException();
-	}
-
-	@Override
-	public User firstRegister(CreateData<User> data, UserHttpExchange exchange) {
-		var u = data.user().withRoles(Set.of(UserRole.ADMIN));
-		data = data.withUser(u);
-		return super.firstRegister(data, exchange);
+	public BlankBackendFileHandlerFactory(Properties configuration, String configurationKey) {
+		var d = configuration.getProperty(configurationKey + ".upload.directory");
+		if (d.startsWith("~"))
+			d = System.getProperty("user.home") + d.substring(1);
+		super(Path.of(d));
 	}
 }

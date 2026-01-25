@@ -38,8 +38,11 @@ public class FileApi {
 
 	protected final Properties configuration;
 
-	public FileApi(Properties configuration) {
+	protected final String configurationKey;
+
+	public FileApi(Properties configuration, String configurationKey) {
 		this.configuration = configuration;
+		this.configurationKey = configurationKey;
 	}
 
 	@Handle(method = "POST", path = "upload")
@@ -48,7 +51,7 @@ public class FileApi {
 		for (var x : ff.entrySet()) {
 			Path d;
 			{
-				var y = configuration.getProperty("blank-template.upload.directory");
+				var y = configuration.getProperty(configurationKey + ".upload.directory");
 				if (y.startsWith("~"))
 					y = System.getProperty("user.home") + y.substring(1);
 				d = Path.of(y);

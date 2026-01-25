@@ -22,19 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate.frontend;
 
-import java.nio.file.Path;
+import java.net.URI;
+import java.util.List;
 import java.util.Properties;
 
-import com.janilla.backend.cms.CmsFileHandlerFactory;
+import com.janilla.http.HttpClient;
+import com.janilla.http.HttpCookie;
+import com.janilla.java.UriQueryBuilder;
 
-public class CustomFileHandlerFactory extends CmsFileHandlerFactory {
+public class BlankDataFetching {
 
-	public CustomFileHandlerFactory(Properties configuration) {
-		var d = configuration.getProperty("blank-template.upload.directory");
-		if (d.startsWith("~"))
-			d = System.getProperty("user.home") + d.substring(1);
-		super(Path.of(d));
+	protected final String apiUrl;
+
+	protected final HttpClient httpClient;
+
+	public BlankDataFetching(Properties configuration, String configurationKey, HttpClient httpClient) {
+		apiUrl = configuration.getProperty(configurationKey + ".api.url");
+		this.httpClient = httpClient;
+	}
+
+	public Object sessionUser(HttpCookie token) {
+		return httpClient.getJson(URI.create(apiUrl + "/users/me"), token != null ? token.format() : null);
+	}
+
+	public List<?> users(Long skip, Long limit) {
+		return (List<?>) httpClient.getJson(URI
+				.create(apiUrl + "/users?" + new UriQueryBuilder().append("skip", skip != null ? skip.toString() : null)
+						.append("limit", limit != null ? limit.toString() : null)));
 	}
 }

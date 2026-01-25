@@ -26,10 +26,10 @@ import WebComponent from "web-component";
 
 const adminRegex = /^\/admin(\/.*)?$/;
 
-export default class App extends WebComponent {
+export default class BlankApp extends WebComponent {
 
     static get templateNames() {
-        return ["app"];
+        return ["blank-app"];
     }
 
     static get observedAttributes() {
@@ -100,33 +100,32 @@ export default class App extends WebComponent {
 
         this.appendChild(this.interpolateDom({
             $template: "",
-            site: s.notFound ? { $template: "not-found" } : {
-                $template: "page",
-                slug: p.split("/").map(x => x === "" ? "home" : x)[1]
-            }
+            site: await this.site()
         }));
+    }
+
+    async site() {
+        return this.customState.notFound ? { $template: "not-found" } : {
+            $template: "page",
+            slug: this.currentPath.split("/").map(x => x === "" ? "home" : x)[1]
+        };
     }
 
     handleClick = event => {
         const a = event.target.closest("a");
         if (a?.href && !event.defaultPrevented && !a.target) {
-            if (a.getAttribute("href") === "#") {
-                event.preventDefault();
-                this.querySelector("dialog").showModal();
-            } else {
-                const u = new URL(a.href);
-                event.preventDefault();
-                history.pushState({}, "", u.pathname + u.search);
-                dispatchEvent(new CustomEvent("popstate"));
-            }
+            const u = new URL(a.href);
+            event.preventDefault();
+            history.pushState({}, "", u.pathname + u.search);
+            dispatchEvent(new CustomEvent("popstate"));
         }
     }
 
     handlePopState = () => {
         // console.log("handlePopState", JSON.stringify(history.state));
         delete this.serverState;
-        window.scrollTo(0, 0);
         delete this.customState.notFound;
+        window.scrollTo(0, 0);
         this.requestDisplay();
     }
 
@@ -140,7 +139,7 @@ export default class App extends WebComponent {
     }
 
     updateSeo(meta) {
-        const sn = "Janilla Blank Template";
+        const sn = this.dataset.title;
         const t = [meta?.title && meta.title !== sn ? meta.title : null, sn].filter(x => x).join(" | ");
         const d = meta?.description ?? "";
         for (const [k, v] of Object.entries({
@@ -155,6 +154,8 @@ export default class App extends WebComponent {
         }))
             if (k === "title")
                 document.title = v ?? "";
+        //else
+        //	document.querySelector(`meta[name="${k}"]`).setAttribute("content", v ?? "");
     }
 
     notFound() {

@@ -26,14 +26,17 @@ package com.janilla.blanktemplate.backend;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
+import com.janilla.http.HttpRequest;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
@@ -45,52 +48,45 @@ import com.janilla.web.Invocation;
 import com.janilla.web.InvocationHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
-public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
-
-	public static final AtomicReference<CustomInvocationHandlerFactory> INSTANCE = new AtomicReference<>();
-
-	protected static final Set<String> GUEST_POST = Set.of("/api/users/first-register", "/api/users/forgot-password",
-			"/api/users/login", "/api/users/reset-password");
-
-	protected static final Set<String> USER_LOGIN_LOGOUT = Set.of("/api/users/login", "/api/users/logout");
+public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFactory {
 
 	protected final Properties configuration;
 
+	protected final String configurationKey;
+
 	protected final DiFactory diFactory;
 
-	public CustomInvocationHandlerFactory(List<Invocable> invocables, Function<Class<?>, Object> instanceResolver,
+	protected final Set<String> guestPost;
+
+	protected final Set<String> userLoginLogout;
+
+	public BlankBackendInvocationHandlerFactory(List<Invocable> invocables, Function<Class<?>, Object> instanceResolver,
 			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
-			HttpHandlerFactory rootFactory, Properties configuration, DiFactory diFactory) {
+			HttpHandlerFactory rootFactory, Properties configuration, String configurationKey, DiFactory diFactory) {
 		super(invocables, instanceResolver, invocationComparator, renderableFactory, rootFactory);
 		this.configuration = configuration;
+		this.configurationKey = configurationKey;
 		this.diFactory = diFactory;
-		if (!INSTANCE.compareAndSet(null, this))
-			throw new IllegalStateException();
+		guestPost = Stream.of("/api/users/first-register", "/api/users/forgot-password", "/api/users/login",
+				"/api/users/reset-password").collect(Collectors.toCollection(HashSet::new));
+		userLoginLogout = Stream.of("/api/users/login", "/api/users/logout")
+				.collect(Collectors.toCollection(HashSet::new));
 	}
 
 	@Override
 	protected boolean handle(Invocation invocation, HttpExchange exchange) {
 		var rq = exchange.request();
-		if (rq.getPath().startsWith("/api/"))
-			switch (rq.getMethod()) {
-			case "GET", "OPTIONS":
-				break;
-			case "POST":
-				if (GUEST_POST.contains(rq.getPath()))
-					break;
-			default:
-				((BackendExchange) exchange).requireSessionEmail();
-				break;
-			}
+		if (requireSessionEmail(rq))
+			((BlankBackendHttpExchange) exchange).requireSessionEmail();
 
-		if (Boolean.parseBoolean(configuration.getProperty("blank-template.live-demo"))) {
-			if (rq.getMethod().equals("GET") || USER_LOGIN_LOGOUT.contains(rq.getPath()))
+		if (Boolean.parseBoolean(configuration.getProperty(configurationKey + ".live-demo"))) {
+			if (rq.getMethod().equals("GET") || userLoginLogout.contains(rq.getPath()))
 				;
 			else
 				throw new HandleException(new MethodBlockedException());
 		}
 
-		var o = configuration.getProperty("blank-template.api.cors.origin");
+		var o = configuration.getProperty(configurationKey + ".api.cors.origin");
 		if (o != null && !o.isEmpty()) {
 			var rs = exchange.response();
 			rs.setHeaderValue("access-control-allow-credentials", "true");
@@ -105,6 +101,19 @@ public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 //			}
 
 		return super.handle(invocation, exchange);
+	}
+
+	protected boolean requireSessionEmail(HttpRequest request) {
+		if (!request.getPath().startsWith("/api/"))
+			return false;
+		switch (request.getMethod()) {
+		case "GET", "OPTIONS":
+			return false;
+		case "POST":
+			return !guestPost.contains(request.getPath());
+		default:
+			return true;
+		}
 	}
 
 	@Override

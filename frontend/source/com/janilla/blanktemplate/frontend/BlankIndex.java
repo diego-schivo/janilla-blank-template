@@ -24,43 +24,13 @@
  */
 package com.janilla.blanktemplate.frontend;
 
-import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
-import com.janilla.web.Handle;
+import com.janilla.web.Render;
 
-public class WebHandling {
-
-	protected final DataFetching dataFetching;
-
-	protected final IndexFactory indexFactory;
-
-	public WebHandling(DataFetching dataFetching, IndexFactory indexFactory) {
-		this.dataFetching = dataFetching;
-		this.indexFactory = indexFactory;
-	}
-
-	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
-	public Object admin(String path, FrontendExchange exchange) {
-//		IO.println("WebHandling.admin, path=" + path);
-		if (path == null || path.isEmpty())
-			path = "/";
-		switch (path) {
-		case "/":
-			if (exchange.sessionUser() == null)
-				return URI.create("/admin/login");
-			break;
-		case "/login":
-			if (((List<?>) dataFetching.users(0l, 1l)).isEmpty())
-				return URI.create("/admin/create-first-user");
-			break;
-		}
-		return indexFactory.index(exchange);
-	}
-
-	@Handle(method = "GET", path = "/")
-	public Object page(FrontendExchange exchange) {
-//		IO.println("WebHandling.page");
-		return indexFactory.index(exchange);
-	}
+@Render(template = "index.html")
+public record BlankIndex(String title, @Render(renderer = JsonRenderer.class) Map<String, String> imports,
+		String apiUrl, @Render(renderer = StateRenderer.class) Map<String, Object> state, List<Template> templates)
+		implements Index {
 }

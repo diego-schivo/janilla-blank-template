@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Janilla Blank Template</title>
+    <title>${title}</title>
     <link rel="icon" href="/images/favicon.svg" />
     <link rel="stylesheet" href="/style.css" />
     <script type="importmap">
@@ -14,7 +14,7 @@
     <script type="module" src="/script.js"></script>
   </head>
   <body>
-    <app-element data-api-url="${apiUrl}">
+    <app-element data-title="${title}" data-api-url="${apiUrl}">
       <script type="application/json">${state}</script>
     </app-element>
     <!--${templates}-->

@@ -30,9 +30,9 @@ import java.util.function.Predicate;
 
 import com.janilla.backend.cms.CmsFileHandlerFactory;
 import com.janilla.backend.cms.CollectionApi;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpResponse;
-import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/media")
@@ -40,16 +40,20 @@ public class MediaApi extends CollectionApi<Long, Media> {
 
 	protected final Properties configuration;
 
-	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration) {
+	protected final String configurationKey;
+
+	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
+			String configurationKey) {
 		super(Media.class, drafts, persistence);
 		this.configuration = configuration;
+		this.configurationKey = configurationKey;
 	}
 
 	@Handle(method = "GET", path = "file/(.+)")
 	public void file(Path path, HttpResponse response) {
 		Path d;
 		{
-			var x = configuration.getProperty("blank-template.upload.directory");
+			var x = configuration.getProperty(configurationKey + ".upload.directory");
 			if (x.startsWith("~"))
 				x = System.getProperty("user.home") + x.substring(1);
 			d = Path.of(x);
