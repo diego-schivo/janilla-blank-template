@@ -54,12 +54,14 @@ import com.janilla.web.ResourceMap;
 
 public class BlankFrontend {
 
+	public static final ScopedValue<BlankFrontend> INSTANCE = ScopedValue.newInstance();
+
 	public static void main(String[] args) {
 		try {
 			BlankFrontend a;
 			{
 				var f = new DiFactory(Stream.of("com.janilla.web", BlankFrontend.class.getPackageName())
-						.flatMap(x -> Java.getPackageClasses(x).stream()).toList());
+						.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList());
 				a = f.create(BlankFrontend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -136,12 +138,12 @@ public class BlankFrontend {
 		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);
-			handler = x -> {
+			handler = x -> ScopedValue.where(INSTANCE, this).call(() -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)
 					throw new NotFoundException(x.request().getMethod() + " " + x.request().getTarget());
 				return h.handle(x);
-			};
+			});
 		}
 	}
 
@@ -185,8 +187,8 @@ public class BlankFrontend {
 		return resourceMap;
 	}
 
-	protected List<Path> resourcePaths() {
-		return Stream.of("com.janilla.frontend", BlankFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
+	protected Map<String, List<Path>> resourcePaths() {
+		return Map.of("", Stream.of("com.janilla.frontend", BlankFrontend.class.getPackageName())
+				.flatMap(x -> Java.getPackagePaths(x, true).filter(Files::isRegularFile)).toList());
 	}
 }

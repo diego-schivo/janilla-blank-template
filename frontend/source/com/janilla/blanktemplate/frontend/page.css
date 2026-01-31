@@ -22,47 +22,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-html:has(page-element) {
-  background-color: rgb(0, 0, 0);
-
-  body {
-    color: rgb(255, 255, 255);
-    font-family: system-ui;
-    height: 100%;
-    margin: 0;
-  }
-}
-
 page-element {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  justify-content: center;
-  margin: 0 auto;
-  max-width: 64rem;
-  padding: 1.5rem;
+  main {
+    box-sizing: border-box;
+    height: 100vh;
+    margin: 0 auto;
+    max-width: 64rem;
+    padding: 1.5rem;
+  }
 
   article {
-    align-items: center;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    height: 100%;
+  }
+
+  section {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     justify-content: center;
 
     p {
       align-items: center;
       display: flex;
       gap: 0.75rem;
-      margin: 0;
     }
   }
 
-  img {
+  header {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+
+  janilla-logo {
+    aspect-ratio: 1;
     height: 4.0625rem;
-    object-fit: cover;
-    object-position: left;
-    width: 4.0625rem;
+    overflow: hidden;
   }
 
   h1 {
@@ -80,6 +78,7 @@ page-element {
   }
 
   footer {
+    --link-background: light-dark(rgb(195, 195, 195), rgb(60, 60, 60));
     p {
       font-size: 0.9375rem;
       line-height: 1.8;
@@ -87,13 +86,11 @@ page-element {
     }
 
     a {
-      background: rgb(60, 60, 60);
+      background: var(--link-background);
       border-radius: 0.25rem;
-      color: rgb(255, 255, 255);
       display: inline-block;
       line-height: 1.6;
       padding: 0 0.5625rem;
-      text-decoration: none;
     }
   }
 }

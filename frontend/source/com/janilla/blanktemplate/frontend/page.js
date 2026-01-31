@@ -26,6 +26,10 @@ import WebComponent from "web-component";
 
 export default class Page extends WebComponent {
 
+    static get moduleUrl() {
+        return import.meta.url;
+    }
+
     static get templateNames() {
         return ["page"];
     }
@@ -39,8 +43,8 @@ export default class Page extends WebComponent {
         if (this.dataset.slug === "home")
             this.appendChild(this.interpolateDom({
                 $template: "",
-                text: a.user
-                    ? `Welcome back, ${a.user.email}`
+                text: a.currentUser
+                    ? `Welcome back, ${a.currentUser.email}`
                     : "Welcome to your new project."
             }));
         else

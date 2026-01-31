@@ -42,9 +42,9 @@ import com.janilla.backend.persistence.Index;
 import com.janilla.backend.persistence.Store;
 
 @Store
-public record BlankUser(Long id, String name, @Index String email, String salt, String hash,
-		@Index String resetPasswordToken, Instant resetPasswordExpiration, Set<BlankUserRole> roles, Instant createdAt,
-		Instant updatedAt, DocumentStatus documentStatus, Instant publishedAt) implements User<Long, BlankUserRole> {
+public record UserImpl(Long id, String name, @Index String email, String salt, String hash,
+		@Index String resetPasswordToken, Instant resetPasswordExpiration, Set<UserRoleImpl> roles, Instant createdAt,
+		Instant updatedAt, DocumentStatus documentStatus, Instant publishedAt) implements User<Long, UserRoleImpl> {
 
 	private static final SecretKeyFactory SECRET;
 
@@ -70,7 +70,7 @@ public record BlankUser(Long id, String name, @Index String email, String salt, 
 	}
 
 	@Override
-	public boolean hasRole(BlankUserRole role) {
+	public boolean hasRole(UserRoleImpl role) {
 		return roles != null && roles.contains(role);
 	}
 
@@ -83,27 +83,27 @@ public record BlankUser(Long id, String name, @Index String email, String salt, 
 	}
 
 	@Override
-	public BlankUser withPassword(String password) {
+	public UserImpl withPassword(String password) {
 		if (password == null || password.isEmpty())
-			return new BlankUser(id, name, email, null, null, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
-					updatedAt, documentStatus, publishedAt);
+			return new UserImpl(id, name, email, null, null, resetPasswordToken, resetPasswordExpiration, roles,
+					createdAt, updatedAt, documentStatus, publishedAt);
 		var s = new byte[16];
 		RANDOM.nextBytes(s);
 		var h = hash(password.toCharArray(), s);
 		var f = HexFormat.of();
-		return new BlankUser(id, name, email, f.formatHex(s), f.formatHex(h), resetPasswordToken, resetPasswordExpiration,
-				roles, createdAt, updatedAt, documentStatus, publishedAt);
+		return new UserImpl(id, name, email, f.formatHex(s), f.formatHex(h), resetPasswordToken,
+				resetPasswordExpiration, roles, createdAt, updatedAt, documentStatus, publishedAt);
 	}
 
 	@Override
-	public BlankUser withResetPassword(String resetPasswordToken, Instant resetPasswordExpiration) {
-		return new BlankUser(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
+	public UserImpl withResetPassword(String resetPasswordToken, Instant resetPasswordExpiration) {
+		return new UserImpl(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
 				updatedAt, documentStatus, publishedAt);
 	}
 
 	@Override
-	public BlankUser withRoles(Set<BlankUserRole> roles) {
-		return new BlankUser(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
+	public UserImpl withRoles(Set<UserRoleImpl> roles) {
+		return new UserImpl(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
 				updatedAt, documentStatus, publishedAt);
 	}
 }

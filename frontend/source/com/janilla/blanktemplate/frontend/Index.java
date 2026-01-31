@@ -11,6 +11,14 @@ import com.janilla.web.Renderer;
 
 public interface Index {
 
+	String title();
+
+	Map<String, String> imports();
+
+	String key();
+
+	String apiUrl();
+
 	Map<String, Object> state();
 
 	List<Template> templates();

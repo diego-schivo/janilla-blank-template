@@ -28,23 +28,23 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.janilla.backend.cms.UserApi;
+import com.janilla.backend.cms.AbstractUserApi;
 import com.janilla.backend.cms.UserHttpExchange;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/users")
-public class BlankUserApi extends UserApi<Long, BlankUserRole, BlankUser> {
+public class UserApi extends AbstractUserApi<Long, UserImpl, UserRoleImpl> {
 
-	public BlankUserApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
+	public UserApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
 			String configurationKey) {
-		super(BlankUser.class, drafts, persistence, configuration.getProperty(configurationKey + ".jwt.key"));
+		super(UserImpl.class, drafts, persistence, configuration.getProperty(configurationKey + ".jwt.key"));
 	}
 
 	@Override
-	public BlankUser firstRegister(CreateData<BlankUser> data, UserHttpExchange exchange) {
-		var u = data.user().withRoles(Set.of(BlankUserRole.ADMIN));
+	public UserImpl firstRegister(CreateData<UserImpl> data, UserHttpExchange<UserImpl> exchange) {
+		var u = data.user().withRoles(Set.of(UserRoleImpl.ADMIN));
 		data = data.withUser(u);
 		return super.firstRegister(data, exchange);
 	}

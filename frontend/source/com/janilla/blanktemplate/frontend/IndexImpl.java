@@ -22,11 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate.frontend;
 
-import com.janilla.backend.cms.UserRole;
+import java.util.List;
+import java.util.Map;
 
-public enum BlankUserRole implements UserRole {
+import com.janilla.web.Render;
 
-	ADMIN
+@Render(template = "index.html")
+public record IndexImpl(String title, @Render(renderer = JsonRenderer.class) Map<String, String> imports, String key,
+		String apiUrl, @Render(renderer = StateRenderer.class) Map<String, Object> state, List<Template> templates)
+		implements Index {
 }

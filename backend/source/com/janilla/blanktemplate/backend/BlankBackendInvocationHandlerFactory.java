@@ -34,6 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.janilla.backend.cms.UserHttpExchange;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpRequest;
@@ -77,7 +78,7 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 	protected boolean handle(Invocation invocation, HttpExchange exchange) {
 		var rq = exchange.request();
 		if (requireSessionEmail(rq))
-			((BlankBackendHttpExchange) exchange).requireSessionEmail();
+			((UserHttpExchange<?>) exchange).requireSessionEmail();
 
 		if (Boolean.parseBoolean(configuration.getProperty(configurationKey + ".live-demo"))) {
 			if (rq.getMethod().equals("GET") || userLoginLogout.contains(rq.getPath()))
@@ -95,7 +96,7 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 
 //		if (r.getPath().startsWith("/api/"))
 //			try {
-//				Thread.sleep(500);
+//				TimeUnit.SECONDS.sleep(1);
 //			} catch (InterruptedException e) {
 //				e.printStackTrace();
 //			}

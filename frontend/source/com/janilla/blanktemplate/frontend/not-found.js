@@ -26,16 +26,16 @@ import WebComponent from "web-component";
 
 export default class NotFound extends WebComponent {
 
-	static get templateNames() {
-		return ["not-found"];
-	}
+    static get moduleUrl() {
+        return import.meta.url;
+    }
 
-	constructor() {
-		super();
-	}
+    static get templateNames() {
+        return ["not-found"];
+    }
 
-	async updateDisplay() {
-	    document.title = "404: This page could not be found.";
-	    this.appendChild(this.interpolateDom({ $template: "" }));
-	}
+    async updateDisplay() {
+        document.title = "404: This page could not be found.";
+        this.appendChild(this.interpolateDom({ $template: "" }));
+    }
 }

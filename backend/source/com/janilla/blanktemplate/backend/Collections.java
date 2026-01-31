@@ -26,5 +26,5 @@ package com.janilla.blanktemplate.backend;
 
 import java.util.List;
 
-public record Collections(List<BlankUser> users, List<Media> media) {
+public record Collections(List<UserImpl> users, List<Media> media) {
 }

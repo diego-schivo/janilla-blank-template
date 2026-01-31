@@ -22,27 +22,70 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+@import "admin.css";
+@import "site.css";
 
-import java.util.Iterator;
+:where(app-element) {
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    min-height: 100vh;
 
-import com.janilla.http.HttpExchange;
-import com.janilla.ioc.DiFactory;
-import com.janilla.java.Java;
-import com.janilla.json.JsonToken;
-import com.janilla.json.ReflectionJsonIterator;
-import com.janilla.web.JsonHandlerFactory;
+    > header {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      padding: 2rem 1rem;
+      position: relative;
+      z-index: 20;
 
-public class BlankBackendJsonHandlerFactory extends JsonHandlerFactory {
+      @media (min-width: 1441px) {
+        padding: 2rem;
+      }
 
-	protected final DiFactory diFactory;
+      a {
+        color: rgb(255, 255, 255);
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+      }
 
-	public BlankBackendJsonHandlerFactory(DiFactory diFactory) {
-		this.diFactory = diFactory;
-	}
+      img {
+        height: 34px;
+      }
 
-	@Override
-	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
-		return diFactory.create(ReflectionJsonIterator.class, Java.hashMap("object", object, "includeType", true));
-	}
+      nav {
+        align-items: center;
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      lucide-icon {
+        width: 1.25rem;
+      }
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      font-size: 1rem;
+      gap: 4rem;
+      line-height: 1.75;
+
+      > :not(.hero) {
+        padding: 0 1rem;
+
+        @media (min-width: 1441px) {
+          box-sizing: border-box;
+          margin-left: auto;
+          margin-right: auto;
+          max-width: 86rem;
+          padding-left: 2rem;
+          padding-right: 2rem;
+          width: 100%;
+        }
+      }
+    }
+  }
 }

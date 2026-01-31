@@ -28,6 +28,5 @@ module com.janilla.blanktemplate.frontend {
 
 	opens com.janilla.blanktemplate.frontend;
 
-	requires transitive com.janilla.frontend;
 	requires transitive com.janilla.frontend.resources;
 }

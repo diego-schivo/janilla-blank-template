@@ -34,9 +34,6 @@ import java.util.Properties;
 import java.util.stream.Stream;
 
 import com.janilla.blanktemplate.frontend.Index.Template;
-import com.janilla.frontend.ImportMaps;
-import com.janilla.frontend.cms.CmsImportMaps;
-import com.janilla.frontend.resources.FrontendResources;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.DefaultResource;
 import com.janilla.web.ResourceMap;
@@ -64,8 +61,12 @@ public class BlankIndexFactory {
 	}
 
 	public Index index(HttpExchange exchange) {
-		return new BlankIndex(configuration.getProperty(configurationKey + ".title"), imports(),
+		return new IndexImpl(configuration.getProperty(configurationKey + ".title"), imports(), configurationKey,
 				configuration.getProperty(configurationKey + ".api.url"), state(exchange), templates());
+	}
+
+	public Template blankTemplate(String name) {
+		return template(name);
 	}
 
 	protected Map<String, Object> state(HttpExchange exchange) {
@@ -86,10 +87,32 @@ public class BlankIndexFactory {
 	}
 
 	protected void putImports(Map<String, String> map) {
-		ImportMaps.putImports(map);
-		FrontendResources.putImports(map);
-		CmsImportMaps.putImports(map);
-		Stream.of("blank-app", "not-found", "page").forEach(x -> map.put(x, "/" + x + ".js"));
+		Stream.of("janilla-logo", "toaster", "web-component").map(this::frontendImportKey)
+				.forEach(x -> map.put(x, "/" + x + ".js"));
+		Stream.of("lucide-icon").map(this::resourcesImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
+		Stream.of("admin", "admin-array", "admin-bar", "admin-checkbox", "admin-create-first-user", "admin-dashboard",
+				"admin-document", "admin-drawer", "admin-drawer-link", "admin-edit", "admin-fields", "admin-file",
+				"admin-forgot-password", "admin-hidden", "admin-join", "admin-list", "admin-login", "admin-radio-group",
+				"admin-relationship", "admin-rich-text", "admin-select", "admin-slug", "admin-tabs", "admin-text",
+				"admin-unauthorized", "admin-upload", "admin-version", "admin-versions").map(this::cmsImportKey)
+				.forEach(x -> map.put(x, "/" + x + ".js"));
+		Stream.of("app", "not-found", "page").map(this::blankImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
+	}
+
+	protected String frontendImportKey(String name) {
+		return name;
+	}
+
+	protected String resourcesImportKey(String name) {
+		return name;
+	}
+
+	protected String cmsImportKey(String name) {
+		return name;
+	}
+
+	protected String blankImportKey(String name) {
+		return name;
 	}
 
 	protected List<Template> templates() {
@@ -104,10 +127,10 @@ public class BlankIndexFactory {
 	}
 
 	protected void addTemplates(List<Template> list) {
-		Stream.of("app", "not-found", "page").map(this::template).forEach(list::add);
+		Stream.of("app", "not-found", "page").map(this::blankTemplate).forEach(list::add);
 	}
 
-	public Template template(String name) {
+	protected Template template(String name) {
 		var f = (DefaultResource) resourceMap.get("/" + name + ".html");
 		try (var in = f != null ? f.newInputStream() : null) {
 			return in != null ? new Template(name, new String(in.readAllBytes())) : null;

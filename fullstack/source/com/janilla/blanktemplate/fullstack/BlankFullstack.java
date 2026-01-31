@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.blanktemplate.backend.BlankBackendHttpExchange;
+import com.janilla.blanktemplate.backend.BackendHttpExchange;
 import com.janilla.blanktemplate.backend.BlankBackend;
 import com.janilla.blanktemplate.frontend.BlankFrontend;
 import com.janilla.http.HttpExchange;
@@ -54,7 +54,7 @@ public class BlankFullstack {
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
-		var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName()), "fullstack");
+		var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName(), true), "fullstack");
 		serve(f, BlankFullstack.class, args.length > 0 ? args[0] : null);
 	}
 
@@ -168,16 +168,16 @@ public class BlankFullstack {
 		return Stream
 				.of("com.janilla.web", "com.janilla.backend.cms", BlankBackend.class.getPackageName(),
 						BlankFullstack.class.getPackageName())
-				.flatMap(x -> Java.getPackageClasses(x).stream()).toList();
+				.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList();
 	}
 
 	protected List<Class<?>> frontendTypes() {
 		return Stream.of("com.janilla.web", BlankFrontend.class.getPackageName(), BlankFullstack.class.getPackageName())
-				.flatMap(x -> Java.getPackageClasses(x).stream()).toList();
+				.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList();
 	}
 
 	protected boolean handle(HttpExchange exchange) {
-		var h = exchange instanceof BlankBackendHttpExchange ? backend.handler() : frontend.handler();
+		var h = exchange instanceof BackendHttpExchange ? backend.handler() : frontend.handler();
 		return h.handle(exchange);
 	}
 }

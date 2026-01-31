@@ -22,48 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-:root:not(:has(.admin)) {
-  color-scheme: light dark;
+package com.janilla.blanktemplate.backend;
 
-  &:has([data-color-scheme="light"]) {
-    color-scheme: light;
-  }
+import java.util.Properties;
 
-  &:has([data-color-scheme="dark"]) {
-    color-scheme: dark;
-  }
-}
+import com.janilla.backend.cms.AbstractUserHttpExchange;
+import com.janilla.backend.persistence.Persistence;
+import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
 
-:where(:root:not(:has(.admin)), :host:not(:has(.admin))) {
-  line-height: 1.5;
-  text-size-adjust: 100%;
+public class BackendHttpExchange extends AbstractUserHttpExchange<UserImpl> {
 
-  body {
-    background: light-dark(rgb(255, 255, 255), rgb(0, 0, 0));
-    margin: 0;
-  }
-
-  :where(.button) {
-    border-radius: 0.25rem;
-    font-size: 0.9375rem;
-    line-height: 1.6;
-    padding: 0.28125rem 0.5625rem;
-    text-decoration: none;
-
-    @media (min-width: 64rem) {
-      font-size: 1.125rem;
-    }
-
-    &.primary {
-      background: rgb(255, 255, 255);
-      border: 1px solid rgb(0, 0, 0);
-      color: rgb(0, 0, 0);
-    }
-
-    &.secondary {
-      background: rgb(0, 0, 0);
-      border: 1px solid rgb(255, 255, 255);
-      color: rgb(255, 255, 255);
-    }
-  }
+	public BackendHttpExchange(HttpRequest request, HttpResponse response, Properties configuration,
+			String configurationKey, Persistence persistence) {
+		super(request, response, configuration.getProperty(configurationKey + ".jwt.cookie"),
+				configuration.getProperty(configurationKey + ".jwt.key"), persistence.crud(UserImpl.class));
+	}
 }

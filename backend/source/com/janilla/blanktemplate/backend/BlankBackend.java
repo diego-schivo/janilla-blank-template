@@ -67,7 +67,7 @@ public class BlankBackend {
 			BlankBackend a;
 			{
 				var f = new DiFactory(Stream.of("com.janilla.web", BlankBackend.class.getPackageName())
-						.flatMap(x -> Java.getPackageClasses(x).stream()).toList());
+						.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList());
 				a = f.create(BlankBackend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -101,6 +101,8 @@ public class BlankBackend {
 	protected final DiFactory diFactory;
 
 	protected final HttpHandler handler;
+
+	protected final boolean includeType;
 
 	protected final List<Invocable> invocables;
 
@@ -140,6 +142,7 @@ public class BlankBackend {
 			persistence = b.build();
 		}
 
+		includeType = true;
 		invocables = diFactory.types().stream()
 				.flatMap(x -> Arrays.stream(x.getMethods())
 						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
@@ -177,6 +180,10 @@ public class BlankBackend {
 		return handler;
 	}
 
+	public boolean includeType() {
+		return includeType;
+	}
+
 	public List<Invocable> invocables() {
 		return invocables;
 	}
@@ -211,7 +218,7 @@ public class BlankBackend {
 	}
 
 	protected boolean testDrafts(HttpExchange x) {
-		var u = x instanceof BlankBackendHttpExchange y ? y.sessionUser() : null;
+		var u = x instanceof BackendHttpExchange y ? y.sessionUser() : null;
 		return u != null;
 	}
 }

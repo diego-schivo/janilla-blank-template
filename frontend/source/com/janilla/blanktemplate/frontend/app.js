@@ -26,14 +26,14 @@ import WebComponent from "web-component";
 
 const adminRegex = /^\/admin(\/.*)?$/;
 
-export default class BlankApp extends WebComponent {
+export default class App extends WebComponent {
 
-    static get templateNames() {
-        return ["blank-app"];
+    static get moduleUrl() {
+        return import.meta.url;
     }
 
-    static get observedAttributes() {
-        return ["data-api-url"];
+    static get templateNames() {
+        return ["app"];
     }
 
     constructor() {
@@ -86,7 +86,7 @@ export default class BlankApp extends WebComponent {
 
         const p = this.currentPath;
         const m = p.match(adminRegex);
-        if (m) {
+        if (m)
             this.appendChild(this.interpolateDom({
                 $template: "",
                 admin: {
@@ -95,29 +95,27 @@ export default class BlankApp extends WebComponent {
                     path: m[1] ?? "/"
                 }
             }));
-            return;
-        }
+        else
+            await this.updateDisplaySite();
+    }
 
+    async updateDisplaySite() {
         this.appendChild(this.interpolateDom({
             $template: "",
-            site: await this.site()
+            site: this.customState.notFound ? { $template: "not-found" } : {
+                $template: "page",
+                slug: this.currentPath.split("/").map(x => x === "" ? "home" : x)[1]
+            }
         }));
     }
 
-    async site() {
-        return this.customState.notFound ? { $template: "not-found" } : {
-            $template: "page",
-            slug: this.currentPath.split("/").map(x => x === "" ? "home" : x)[1]
-        };
-    }
-
     handleClick = event => {
-        const a = event.target.closest("a");
-        if (a?.href && !event.defaultPrevented && !a.target) {
-            const u = new URL(a.href);
-            event.preventDefault();
-            history.pushState({}, "", u.pathname + u.search);
-            dispatchEvent(new CustomEvent("popstate"));
+        if (!event.defaultPrevented) {
+            const a = event.target.closest("a");
+            if (a?.href && !a.target) {
+                event.preventDefault();
+                this.navigate(new URL(a.href));
+            }
         }
     }
 
@@ -130,6 +128,7 @@ export default class BlankApp extends WebComponent {
     }
 
     navigate(url) {
+        this.querySelectorAll("dialog[open]").forEach(x => x.close());
         delete this.serverState;
         delete this.customState.notFound;
         if (url.pathname !== this.currentPath)
