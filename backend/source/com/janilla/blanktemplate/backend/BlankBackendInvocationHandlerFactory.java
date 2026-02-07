@@ -25,12 +25,9 @@
 package com.janilla.blanktemplate.backend;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,9 +41,9 @@ import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.NullTypeResolver;
 import com.janilla.java.TypeResolver;
 import com.janilla.web.HandleException;
-import com.janilla.web.Invocable;
 import com.janilla.web.Invocation;
 import com.janilla.web.InvocationHandlerFactory;
+import com.janilla.web.InvocationResolver;
 import com.janilla.web.RenderableFactory;
 
 public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFactory {
@@ -61,10 +58,10 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 
 	protected final Set<String> userLoginLogout;
 
-	public BlankBackendInvocationHandlerFactory(List<Invocable> invocables, Function<Class<?>, Object> instanceResolver,
-			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
-			HttpHandlerFactory rootFactory, Properties configuration, String configurationKey, DiFactory diFactory) {
-		super(invocables, instanceResolver, invocationComparator, renderableFactory, rootFactory);
+	public BlankBackendInvocationHandlerFactory(InvocationResolver invocationResolver,
+			RenderableFactory renderableFactory, HttpHandlerFactory rootFactory, Properties configuration,
+			String configurationKey, DiFactory diFactory) {
+		super(invocationResolver, renderableFactory, rootFactory);
 		this.configuration = configuration;
 		this.configurationKey = configurationKey;
 		this.diFactory = diFactory;
@@ -125,9 +122,5 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 								? Collections.singletonMap("typeResolver",
 										type != null && type != NullTypeResolver.class ? diFactory.create(type) : null)
 								: null);
-	}
-
-	protected List<String> handleMethods(String path) {
-		return invocationGroups(path).flatMap(x -> x.methods().keySet().stream()).toList();
 	}
 }

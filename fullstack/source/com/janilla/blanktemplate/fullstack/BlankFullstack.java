@@ -168,12 +168,12 @@ public class BlankFullstack {
 		return Stream
 				.of("com.janilla.web", "com.janilla.backend.cms", BlankBackend.class.getPackageName(),
 						BlankFullstack.class.getPackageName())
-				.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList();
+				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList();
 	}
 
 	protected List<Class<?>> frontendTypes() {
 		return Stream.of("com.janilla.web", BlankFrontend.class.getPackageName(), BlankFullstack.class.getPackageName())
-				.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList();
+				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList();
 	}
 
 	protected boolean handle(HttpExchange exchange) {

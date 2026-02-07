@@ -38,7 +38,12 @@ export default class App extends WebComponent {
 
     constructor() {
         super();
-        if (!history.state)
+		const el = this.children.length === 1 ? this.firstElementChild : null;
+		if (el?.matches('[type="application/json"]')) {
+		    this.serverState = JSON.parse(el.text);
+		    el.remove();
+		}
+        if (!history.state || this.serverState)
             history.replaceState({}, "");
     }
 
@@ -56,11 +61,6 @@ export default class App extends WebComponent {
     }
 
     connectedCallback() {
-        const el = this.children.length === 1 ? this.firstElementChild : null;
-        if (el?.matches('[type="application/json"]')) {
-            this.serverState = JSON.parse(el.text);
-            el.remove();
-        }
         super.connectedCallback();
         this.addEventListener("click", this.handleClick);
         addEventListener("popstate", this.handlePopState);
@@ -112,9 +112,10 @@ export default class App extends WebComponent {
     handleClick = event => {
         if (!event.defaultPrevented) {
             const a = event.target.closest("a");
-            if (a?.href && !a.target) {
+			const u = a?.href && !a.target ? new URL(a.href) : null;
+            if (u?.origin === location.origin) {
                 event.preventDefault();
-                this.navigate(new URL(a.href));
+                this.navigate(u);
             }
         }
     }

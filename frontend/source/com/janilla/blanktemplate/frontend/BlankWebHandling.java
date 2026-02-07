@@ -24,9 +24,6 @@
  */
 package com.janilla.blanktemplate.frontend;
 
-import java.net.URI;
-import java.util.List;
-
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Handle;
 
@@ -44,18 +41,18 @@ public class BlankWebHandling {
 	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
 	public Object admin(String path, HttpExchange exchange) {
 //		IO.println("WebHandling.admin, path=" + path);
-		if (path == null || path.isEmpty())
-			path = "/";
-		switch (path) {
-		case "/":
-			if (((BlankFrontendHttpExchange) exchange).sessionUser() == null)
-				return URI.create("/admin/login");
-			break;
-		case "/login":
-			if (((List<?>) dataFetching.users(0l, 1l)).isEmpty())
-				return URI.create("/admin/create-first-user");
-			break;
-		}
+//		if (path == null || path.isEmpty())
+//			path = "/";
+//		switch (path) {
+//		case "/":
+//			if (((BlankFrontendHttpExchange) exchange).sessionUser() == null)
+//				return URI.create("/admin/login");
+//			break;
+//		case "/login":
+//			if (((List<?>) dataFetching.users(0l, 1l)).isEmpty())
+//				return URI.create("/admin/create-first-user");
+//			break;
+//		}
 		return indexFactory.index(exchange);
 	}
 

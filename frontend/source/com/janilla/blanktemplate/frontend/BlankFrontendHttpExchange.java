@@ -24,19 +24,12 @@
  */
 package com.janilla.blanktemplate.frontend;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import com.janilla.http.HttpCookie;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.http.SimpleHttpExchange;
-import com.janilla.json.Jwt;
-import com.janilla.web.UnauthorizedException;
 
 public class BlankFrontendHttpExchange extends SimpleHttpExchange {
 
@@ -44,58 +37,16 @@ public class BlankFrontendHttpExchange extends SimpleHttpExchange {
 
 	protected final String configurationKey;
 
-	protected final BlankDataFetching dataFetching;
-
-	protected final Map<String, Object> session = new HashMap<>();
-
 	public BlankFrontendHttpExchange(HttpRequest request, HttpResponse response, Properties configuration,
-			String configurationKey, BlankDataFetching dataFetching) {
+			String configurationKey) {
 		super(request, response);
 		this.configuration = configuration;
 		this.configurationKey = configurationKey;
-		this.dataFetching = dataFetching;
 	}
 
 	public HttpCookie tokenCookie() {
 		var c = configuration.getProperty(configurationKey + ".jwt.cookie");
 		return request.getHeaderValues("cookie").map(HttpCookie::parse).filter(x -> x.name().equals(c)).findFirst()
 				.orElse(null);
-	}
-
-	public String sessionEmail() {
-		if (!session.containsKey("sessionEmail")) {
-			var t = tokenCookie();
-			Map<String, ?> p;
-			try {
-				p = t != null ? Jwt.verifyToken(t.value(), configuration.getProperty(configurationKey + ".jwt.key"))
-						: null;
-			} catch (IllegalArgumentException e) {
-				p = null;
-			}
-			session.put("sessionEmail", p != null ? p.get("loggedInAs") : null);
-		}
-		return (String) session.get("sessionEmail");
-	}
-
-	public Object sessionUser() {
-		if (!session.containsKey("sessionUser")) {
-			var t = tokenCookie();
-			session.put("sessionUser", t != null ? dataFetching.sessionUser(t) : null);
-		}
-		return session.get("sessionUser");
-	}
-
-	public void requireSessionEmail() {
-		if (sessionEmail() == null)
-			throw new UnauthorizedException();
-	}
-
-	public void setSessionCookie(String value) {
-		var c = configuration.getProperty(configurationKey + ".jwt.cookie");
-		response().setHeaderValue("set-cookie",
-				HttpCookie.of(c, value).withPath("/").withHttpOnly(true).withSameSite("Lax")
-						.withExpires(value != null && !value.isEmpty() ? ZonedDateTime.now(ZoneOffset.UTC).plusHours(2)
-								: ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
-						.format());
 	}
 }

@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -45,9 +46,9 @@ import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
-import com.janilla.net.SecureServer;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Invocable;
+import com.janilla.web.InvocationResolver;
 import com.janilla.web.NotFoundException;
 import com.janilla.web.RenderableFactory;
 import com.janilla.web.ResourceMap;
@@ -57,33 +58,52 @@ public class BlankFrontend {
 	public static final ScopedValue<BlankFrontend> INSTANCE = ScopedValue.newInstance();
 
 	public static void main(String[] args) {
-		try {
-			BlankFrontend a;
-			{
-				var f = new DiFactory(Stream.of("com.janilla.web", BlankFrontend.class.getPackageName())
-						.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList());
-				a = f.create(BlankFrontend.class,
-						Java.hashMap("diFactory", f, "configurationFile",
-								args.length > 0 ? Path.of(
-										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
-												: args[0])
-										: null));
-			}
+		IO.println(ProcessHandle.current().pid());
+		var f = new DiFactory(Stream.of("com.janilla.web", BlankFrontend.class.getPackageName())
+				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
+		serve(f, BlankFrontend.class, args.length > 0 ? args[0] : null);
+	}
 
-			HttpServer s;
-			{
-				SSLContext c;
-				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
-					c = Java.sslContext(x, "passphrase".toCharArray());
-				}
-				var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".frontend.server.port"));
-				s = a.diFactory.create(HttpServer.class,
-						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
-			}
-			s.serve();
-		} catch (Throwable e) {
-			e.printStackTrace();
+	protected static <T extends BlankFrontend> void serve(DiFactory diFactory, Class<T> applicationType,
+			String configurationPath) {
+		T a;
+		{
+			a = diFactory.create(applicationType,
+					Java.hashMap("diFactory", diFactory, "configurationFile",
+							configurationPath != null ? Path.of(configurationPath.startsWith("~")
+									? System.getProperty("user.home") + configurationPath.substring(1)
+									: configurationPath) : null));
 		}
+
+		var c = sslContext(a.configuration(), a.configurationKey());
+
+		HttpServer s;
+		{
+			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".frontend.server.port"));
+			s = a.diFactory.create(HttpServer.class,
+					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
+		}
+		s.serve();
+	}
+
+	protected static <T extends BlankFrontend> SSLContext sslContext(Properties configuration,
+			String configurationKey) {
+		SSLContext c;
+		{
+			var p = configuration.getProperty(configurationKey + ".frontend.server.keystore.path");
+			var w = configuration.getProperty(configurationKey + ".frontend.server.keystore.password");
+			if (p.startsWith("~"))
+				p = System.getProperty("user.home") + p.substring(1);
+			var f = Path.of(p);
+			if (!Files.exists(f))
+				Java.generateKeyPair(f, w);
+			try (var s = Files.newInputStream(f)) {
+				c = Java.sslContext(s, w.toCharArray());
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}
+		return c;
 	}
 
 	protected final Properties configuration;
@@ -100,7 +120,7 @@ public class BlankFrontend {
 
 	protected final BlankIndexFactory indexFactory;
 
-	protected final List<Invocable> invocables;
+	protected final InvocationResolver invocationResolver;
 
 	protected final RenderableFactory renderableFactory;
 
@@ -116,25 +136,25 @@ public class BlankFrontend {
 		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 
-		{
-			SSLContext c;
-			try (var x = SecureServer.class.getResourceAsStream("localhost")) {
-				c = Java.sslContext(x, "passphrase".toCharArray());
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-			httpClient = diFactory.create(HttpClient.class, Map.of("sslContext", c));
-		}
+		httpClient = diFactory.create(HttpClient.class,
+				Map.of("sslContext", sslContext(configuration, configurationKey)));
 		dataFetching = diFactory.create(BlankDataFetching.class);
 
 		resourceMap = diFactory.create(ResourceMap.class, Map.of("paths", resourcePaths()));
 		indexFactory = diFactory.create(BlankIndexFactory.class);
 
-		invocables = diFactory.types().stream()
-				.flatMap(x -> Arrays.stream(x.getMethods())
-						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
-						.map(y -> new Invocable(x, y)))
-				.toList();
+		invocationResolver = diFactory.create(InvocationResolver.class,
+				Map.of("invocables",
+						diFactory.types().stream()
+								.flatMap(x -> Arrays.stream(x.getMethods())
+										.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
+										.map(y -> new Invocable(x, y)))
+								.toList(),
+						"instanceResolver", (Function<Class<?>, Object>) x -> {
+							var y = diFactory.context();
+//							IO.println("x=" + x + ", y=" + y);
+							return x.isAssignableFrom(y.getClass()) ? diFactory.context() : diFactory.create(x);
+						}));
 		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);
@@ -175,8 +195,8 @@ public class BlankFrontend {
 		return indexFactory;
 	}
 
-	public List<Invocable> invocables() {
-		return invocables;
+	public InvocationResolver invocationResolver() {
+		return invocationResolver;
 	}
 
 	public RenderableFactory renderableFactory() {

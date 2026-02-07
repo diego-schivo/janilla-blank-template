@@ -71,7 +71,7 @@ public class BlankIndexFactory {
 
 	protected Map<String, Object> state(HttpExchange exchange) {
 		var x = new LinkedHashMap<String, Object>();
-		x.put("user", ((BlankFrontendHttpExchange) exchange).sessionUser());
+//		x.put("user", ((BlankFrontendHttpExchange) exchange).sessionUser());
 		return x;
 	}
 
