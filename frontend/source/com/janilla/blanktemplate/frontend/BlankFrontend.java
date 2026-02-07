@@ -79,7 +79,7 @@ public class BlankFrontend {
 
 		HttpServer s;
 		{
-			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".frontend.server.port"));
+			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".server.port"));
 			s = a.diFactory.create(HttpServer.class,
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
@@ -90,8 +90,8 @@ public class BlankFrontend {
 			String configurationKey) {
 		SSLContext c;
 		{
-			var p = configuration.getProperty(configurationKey + ".frontend.server.keystore.path");
-			var w = configuration.getProperty(configurationKey + ".frontend.server.keystore.password");
+			var p = configuration.getProperty(configurationKey + ".server.keystore.path");
+			var w = configuration.getProperty(configurationKey + ".server.keystore.password");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			var f = Path.of(p);

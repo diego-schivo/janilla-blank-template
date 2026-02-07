@@ -87,8 +87,8 @@ public class BlankBackend {
 
 		SSLContext c;
 		{
-			var p = a.configuration.getProperty(a.configurationKey() + ".backend.server.keystore.path");
-			var w = a.configuration.getProperty(a.configurationKey() + ".backend.server.keystore.password");
+			var p = a.configuration.getProperty(a.configurationKey() + ".server.keystore.path");
+			var w = a.configuration.getProperty(a.configurationKey() + ".server.keystore.password");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			var f = Path.of(p);
@@ -103,7 +103,7 @@ public class BlankBackend {
 
 		HttpServer s;
 		{
-			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".backend.server.port"));
+			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".server.port"));
 			s = a.diFactory.create(HttpServer.class,
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
