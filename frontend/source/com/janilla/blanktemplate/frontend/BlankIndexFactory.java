@@ -87,7 +87,7 @@ public class BlankIndexFactory {
 	}
 
 	protected void putImports(Map<String, String> map) {
-		Stream.of("janilla-logo", "toaster", "web-component").map(this::frontendImportKey)
+		Stream.of("app", "janilla-logo", "toaster", "web-component").map(this::baseImportKey)
 				.forEach(x -> map.put(x, "/" + x + ".js"));
 		Stream.of("lucide-icon").map(this::resourcesImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
 		Stream.of("admin", "admin-array", "admin-bar", "admin-checkbox", "admin-create-first-user", "admin-dashboard",
@@ -99,8 +99,8 @@ public class BlankIndexFactory {
 		Stream.of("app", "not-found", "page").map(this::blankImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
 	}
 
-	protected String frontendImportKey(String name) {
-		return name;
+	protected String baseImportKey(String name) {
+		return "base/" + name;
 	}
 
 	protected String resourcesImportKey(String name) {

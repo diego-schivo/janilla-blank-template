@@ -22,11 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import WebComponent from "web-component";
+import BaseApp from "base/app";
 
 const adminRegex = /^\/admin(\/.*)?$/;
 
-export default class App extends WebComponent {
+export default class App extends BaseApp {
 
     static get moduleUrl() {
         return import.meta.url;
@@ -34,21 +34,6 @@ export default class App extends WebComponent {
 
     static get templateNames() {
         return ["app"];
-    }
-
-    constructor() {
-        super();
-		const el = this.children.length === 1 ? this.firstElementChild : null;
-		if (el?.matches('[type="application/json"]')) {
-		    this.serverState = JSON.parse(el.text);
-		    el.remove();
-		}
-        if (!history.state || this.serverState)
-            history.replaceState({}, "");
-    }
-
-    get currentPath() {
-        return location.pathname;
     }
 
     get currentUser() {
@@ -60,24 +45,9 @@ export default class App extends WebComponent {
         this.dispatchEvent(new CustomEvent("userchanged", { detail: currentUser }));
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        this.addEventListener("click", this.handleClick);
-        addEventListener("popstate", this.handlePopState);
-    }
-
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        this.removeEventListener("click", this.handleClick);
-        removeEventListener("popstate", this.handlePopState);
-    }
-
     async updateDisplay() {
         const s = this.customState;
         const ss = this.serverState;
-
-        if (ss?.error?.code === 404)
-            s.notFound = true;
 
         if (!Object.hasOwn(s, "user"))
             s.user = ss && Object.hasOwn(ss, "user")
@@ -96,7 +66,7 @@ export default class App extends WebComponent {
                 }
             }));
         else
-            await this.updateDisplaySite();
+            await super.updateDisplay();
     }
 
     async updateDisplaySite() {
@@ -109,33 +79,9 @@ export default class App extends WebComponent {
         }));
     }
 
-    handleClick = event => {
-        if (!event.defaultPrevented) {
-            const a = event.target.closest("a");
-			const u = a?.href && !a.target ? new URL(a.href) : null;
-            if (u?.origin === location.origin) {
-                event.preventDefault();
-                this.navigate(u);
-            }
-        }
-    }
-
-    handlePopState = () => {
-        // console.log("handlePopState", JSON.stringify(history.state));
-        delete this.serverState;
-        delete this.customState.notFound;
-        window.scrollTo(0, 0);
-        this.requestDisplay();
-    }
-
     navigate(url) {
         this.querySelectorAll("dialog[open]").forEach(x => x.close());
-        delete this.serverState;
-        delete this.customState.notFound;
-        if (url.pathname !== this.currentPath)
-            window.scrollTo(0, 0);
-        history.pushState({}, "", url.pathname + url.search);
-        this.requestDisplay();
+        super.navigate(url);
     }
 
     updateSeo(meta) {
@@ -156,10 +102,5 @@ export default class App extends WebComponent {
                 document.title = v ?? "";
         //else
         //	document.querySelector(`meta[name="${k}"]`).setAttribute("content", v ?? "");
-    }
-
-    notFound() {
-        this.customState.notFound = true;
-        this.requestDisplay();
     }
 }

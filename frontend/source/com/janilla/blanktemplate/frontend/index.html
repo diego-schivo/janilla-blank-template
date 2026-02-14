@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="index">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,14 +8,16 @@
     <link rel="stylesheet" href="/style.css" />
     <script type="importmap">
       {
-        "imports": ${imports}
+        "imports": <!--${imports}-->
       }
     </script>
     <script type="module" src="/script.js"></script>
   </head>
   <body>
     <app-element data-title="${title}" data-key="${key}" data-api-url="${apiUrl}">
-      <script type="application/json">${state}</script>
+      <script type="application/json">
+        <!--${state}-->
+      </script>
     </app-element>
     <!--${templates}-->
 

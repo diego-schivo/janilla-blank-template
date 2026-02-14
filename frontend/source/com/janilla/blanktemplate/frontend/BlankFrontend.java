@@ -208,7 +208,10 @@ public class BlankFrontend {
 	}
 
 	protected Map<String, List<Path>> resourcePaths() {
-		return Map.of("", Stream.of("com.janilla.frontend", BlankFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackagePaths(x, true).filter(Files::isRegularFile)).toList());
+		var pp1 = Java.getPackagePaths("com.janilla.frontend", false).filter(Files::isRegularFile).toList();
+		var pp2 = Stream
+				.of("com.janilla.frontend.cms", "com.janilla.frontend.resources", BlankFrontend.class.getPackageName())
+				.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList();
+		return Map.of("/base", pp1, "", pp2);
 	}
 }

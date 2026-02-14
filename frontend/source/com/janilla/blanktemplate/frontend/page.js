@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import WebComponent from "web-component";
+import WebComponent from "base/web-component";
 
 export default class Page extends WebComponent {
 
