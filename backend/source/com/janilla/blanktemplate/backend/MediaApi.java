@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Predicate;
 
-import com.janilla.backend.cms.CmsFileHandlerFactory;
+import com.janilla.backend.cms.CmsResourceHandlerFactory;
 import com.janilla.backend.cms.CollectionApi;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpExchange;
@@ -59,6 +59,6 @@ public class MediaApi extends CollectionApi<Long, Media> {
 			d = Path.of(x);
 		}
 		var f = d.resolve(path.getFileName());
-		CmsFileHandlerFactory.handle(f, response);
+		CmsResourceHandlerFactory.handle(f, response);
 	}
 }

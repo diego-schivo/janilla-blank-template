@@ -27,11 +27,11 @@ package com.janilla.blanktemplate.backend;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import com.janilla.backend.cms.CmsFileHandlerFactory;
+import com.janilla.backend.cms.CmsResourceHandlerFactory;
 
-public class BlankBackendFileHandlerFactory extends CmsFileHandlerFactory {
+public class BlankBackendResourceHandlerFactory extends CmsResourceHandlerFactory {
 
-	public BlankBackendFileHandlerFactory(Properties configuration, String configurationKey) {
+	public BlankBackendResourceHandlerFactory(Properties configuration, String configurationKey) {
 		var d = configuration.getProperty(configurationKey + ".upload.directory");
 		if (d.startsWith("~"))
 			d = System.getProperty("user.home") + d.substring(1);
