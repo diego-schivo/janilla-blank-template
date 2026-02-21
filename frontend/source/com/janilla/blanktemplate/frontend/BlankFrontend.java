@@ -78,11 +78,11 @@ public class BlankFrontend {
 									: configurationPath) : null));
 		}
 
-		var c = sslContext(a.configuration(), a.configurationKey());
+		var c = sslContext(a.configuration(), a.configurationKey);
 
 		HttpServer s;
 		{
-			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".server.port"));
+			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey + ".server.port"));
 			s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
@@ -98,8 +98,11 @@ public class BlankFrontend {
 		if (p.startsWith("~"))
 			p = System.getProperty("user.home") + p.substring(1);
 		var f = Path.of(p);
-		if (!Files.exists(f))
-			Java.generateKeyPair(f, w);
+		if (!Files.exists(f)) {
+			var cn = configuration.getProperty(configurationKey + ".server.keystore.common-name");
+			var san = configuration.getProperty(configurationKey + ".server.keystore.subject-alternative-name");
+			Java.generateKeyPair(cn != null ? cn : "localhost", f, w, san != null ? san : "dns:localhost,ip:127.0.0.1");
+		}
 		try (var s = Files.newInputStream(f)) {
 			return Java.sslContext(s, w.toCharArray());
 		} catch (IOException e) {

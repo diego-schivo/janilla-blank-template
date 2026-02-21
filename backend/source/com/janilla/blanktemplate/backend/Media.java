@@ -37,7 +37,7 @@ public record Media(Long id, File file, String alt, String caption, Instant crea
 	public String uri() {
 		var a = BlankBackend.INSTANCE.get();
 		return file != null
-				? (a.configuration().getProperty(a.configurationKey() + ".api.url") + "/images/" + file.name())
+				? (a.configuration().getProperty(a.configurationKey + ".api.url") + "/images/" + file.name())
 				: null;
 	}
 }
