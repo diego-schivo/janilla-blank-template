@@ -4,7 +4,7 @@ This is a porting of [Payload Blank Template](https://github.com/payloadcms/payl
 
 ### View a live demo
 
-Open a browser and navigate to <https://blank-template.janilla.com/>.
+Open a browser and navigate to <https://blanktemplate.janilla.com/>.
 
 ### How you can get started
 
