@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -42,7 +41,9 @@ import java.util.stream.Stream;
 import javax.net.ssl.SSLContext;
 
 import com.janilla.http.HttpClient;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
+import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
@@ -55,12 +56,14 @@ import com.janilla.web.ResourceMap;
 
 public class BlankFrontend {
 
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.blanktemplate.frontend" };
+
 	public static final ScopedValue<BlankFrontend> INSTANCE = ScopedValue.newInstance();
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
-		var f = new DiFactory(Stream.of("com.janilla.web", BlankFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
+		var f = new DiFactory(
+				Arrays.stream(DI_PACKAGES).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
 		serve(f, BlankFrontend.class, args.length > 0 ? args[0] : null);
 	}
 
@@ -80,7 +83,7 @@ public class BlankFrontend {
 		HttpServer s;
 		{
 			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey() + ".server.port"));
-			s = a.diFactory.create(HttpServer.class,
+			s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
 		s.serve();
@@ -88,25 +91,27 @@ public class BlankFrontend {
 
 	protected static <T extends BlankFrontend> SSLContext sslContext(Properties configuration,
 			String configurationKey) {
-		SSLContext c;
-		{
-			var p = configuration.getProperty(configurationKey + ".server.keystore.path");
-			var w = configuration.getProperty(configurationKey + ".server.keystore.password");
-			if (p.startsWith("~"))
-				p = System.getProperty("user.home") + p.substring(1);
-			var f = Path.of(p);
-			if (!Files.exists(f))
-				Java.generateKeyPair(f, w);
-			try (var s = Files.newInputStream(f)) {
-				c = Java.sslContext(s, w.toCharArray());
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
+		var p = configuration.getProperty(configurationKey + ".server.keystore.path");
+		if (p == null)
+			return HttpClient.sslContext("TLSv1.3");
+		var w = configuration.getProperty(configurationKey + ".server.keystore.password");
+		if (p.startsWith("~"))
+			p = System.getProperty("user.home") + p.substring(1);
+		var f = Path.of(p);
+		if (!Files.exists(f))
+			Java.generateKeyPair(f, w);
+		try (var s = Files.newInputStream(f)) {
+			return Java.sslContext(s, w.toCharArray());
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
-		return c;
 	}
 
+	protected final HttpHandlerFactory handlerFactory;
+
 	protected final Properties configuration;
+
+	protected final Path configurationFile;
 
 	protected final String configurationKey;
 
@@ -132,18 +137,20 @@ public class BlankFrontend {
 
 	public BlankFrontend(DiFactory diFactory, Path configurationFile, String configurationKey) {
 		this.diFactory = diFactory;
+		this.configurationFile = configurationFile;
 		this.configurationKey = configurationKey;
 		diFactory.context(this);
-		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
+		configuration = diFactory.create(diFactory.actualType(Properties.class),
+				Collections.singletonMap("file", configurationFile));
 
-		httpClient = diFactory.create(HttpClient.class,
+		httpClient = diFactory.create(diFactory.actualType(HttpClient.class),
 				Map.of("sslContext", sslContext(configuration, configurationKey)));
-		dataFetching = diFactory.create(BlankDataFetching.class);
+		dataFetching = diFactory.create(diFactory.actualType(BlankDataFetching.class));
 
-		resourceMap = diFactory.create(ResourceMap.class, Map.of("paths", resourcePaths()));
-		indexFactory = diFactory.create(BlankIndexFactory.class);
+		resourceMap = diFactory.create(diFactory.actualType(ResourceMap.class), Map.of("paths", resourcePaths()));
+		indexFactory = diFactory.create(diFactory.actualType(BlankIndexFactory.class));
 
-		invocationResolver = diFactory.create(InvocationResolver.class,
+		invocationResolver = diFactory.create(diFactory.actualType(InvocationResolver.class),
 				Map.of("invocables",
 						diFactory.types().stream()
 								.flatMap(x -> Arrays.stream(x.getMethods())
@@ -153,18 +160,12 @@ public class BlankFrontend {
 						"instanceResolver", (Function<Class<?>, Object>) x -> {
 							var y = diFactory.context();
 //							IO.println("x=" + x + ", y=" + y);
-							return x.isAssignableFrom(y.getClass()) ? diFactory.context() : diFactory.create(x);
+							return x.isAssignableFrom(y.getClass()) ? diFactory.context()
+									: diFactory.create(diFactory.actualType(x));
 						}));
-		renderableFactory = diFactory.create(RenderableFactory.class);
-		{
-			var f = diFactory.create(ApplicationHandlerFactory.class);
-			handler = x -> ScopedValue.where(INSTANCE, this).call(() -> {
-				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
-				if (h == null)
-					throw new NotFoundException(x.request().getMethod() + " " + x.request().getTarget());
-				return h.handle(x);
-			});
-		}
+		renderableFactory = diFactory.create(diFactory.actualType(RenderableFactory.class));
+		handlerFactory = diFactory.create(diFactory.actualType(ApplicationHandlerFactory.class));
+		handler = this::handle;
 	}
 
 	public Properties configuration() {
@@ -207,10 +208,19 @@ public class BlankFrontend {
 		return resourceMap;
 	}
 
+	protected boolean handle(HttpExchange exchange) {
+		return ScopedValue.where(INSTANCE, this).call(() -> {
+			var h = handlerFactory
+					.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());
+			if (h == null)
+				throw new NotFoundException(exchange.request().getMethod() + " " + exchange.request().getTarget());
+			return h.handle(exchange);
+		});
+	}
+
 	protected Map<String, List<Path>> resourcePaths() {
 		var pp1 = Java.getPackagePaths("com.janilla.frontend", false).filter(Files::isRegularFile).toList();
-		var pp2 = Stream
-				.of("com.janilla.frontend.cms", "com.janilla.frontend.resources", BlankFrontend.class.getPackageName())
+		var pp2 = Stream.of("com.janilla.frontend.cms", BlankFrontend.class.getPackageName())
 				.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList();
 		return Map.of("/base", pp1, "", pp2);
 	}

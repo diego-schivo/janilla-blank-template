@@ -1,8 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
- * Copyright (c) 2024-2026 Diego Schivo <diego.schivo@janilla.com>
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,22 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+:where(lucide-icon) {
+  aspect-ratio: 1;
+  display: block;
+  width: 1rem;
 
-import java.time.Instant;
-
-import com.janilla.cms.Document;
-import com.janilla.cms.DocumentStatus;
-import com.janilla.persistence.Store;
-
-@Store
-public record Media(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
-		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
-
-	public String uri() {
-		var a = BlankBackend.INSTANCE.get();
-		return file != null
-				? (a.configuration().getProperty(a.configurationKey() + ".api.url") + "/images/" + file.name())
-				: null;
-	}
+  svg {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
 }

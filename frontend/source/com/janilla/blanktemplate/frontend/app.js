@@ -54,7 +54,7 @@ export default class App extends BaseApp {
                 ? ss.user
                 : await (await fetch(`${this.dataset.apiUrl}/users/me`)).json();
 
-        const p = this.currentPath;
+        const p = location.pathname;
         const m = p.match(adminRegex);
         if (m)
             this.appendChild(this.interpolateDom({
@@ -74,7 +74,7 @@ export default class App extends BaseApp {
             $template: "",
             site: this.customState.notFound ? { $template: "not-found" } : {
                 $template: "page",
-                slug: this.currentPath.split("/").map(x => x === "" ? "home" : x)[1]
+                slug: location.pathname.split("/").map(x => x === "" ? "home" : x)[1]
             }
         }));
     }

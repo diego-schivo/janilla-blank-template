@@ -29,14 +29,14 @@ import java.util.Properties;
 import java.util.function.Predicate;
 
 import com.janilla.backend.cms.CmsResourceHandlerFactory;
-import com.janilla.backend.cms.CollectionApi;
+import com.janilla.backend.cms.AbstractCollectionApi;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpResponse;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/media")
-public class MediaApi extends CollectionApi<Long, Media> {
+public class MediaApi extends AbstractCollectionApi<Long, Media> {
 
 	protected final Properties configuration;
 

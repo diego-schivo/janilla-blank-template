@@ -1,8 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
- * Copyright (c) 2024-2026 Diego Schivo <diego.schivo@janilla.com>
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,22 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+import WebComponent from "base/web-component";
 
-import java.time.Instant;
+const documents = {};
+const parser = new DOMParser();
 
-import com.janilla.cms.Document;
-import com.janilla.cms.DocumentStatus;
-import com.janilla.persistence.Store;
+export default class LucideIcon extends WebComponent {
 
-@Store
-public record Media(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
-		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
+	static get observedAttributes() {
+		return ["data-name"];
+	}
 
-	public String uri() {
-		var a = BlankBackend.INSTANCE.get();
-		return file != null
-				? (a.configuration().getProperty(a.configurationKey() + ".api.url") + "/images/" + file.name())
-				: null;
+	constructor() {
+		super();
+	}
+
+	async updateDisplay() {
+		const s = this.customState ?? this.state;
+		if (this.dataset.name === s.name)
+			return;
+		s.name = this.dataset.name;
+		while (this.firstChild)
+			this.removeChild(this.lastChild);
+		if (!s.name)
+			return;
+		documents[s.name] ??= fetch(`/icons/${s.name}.svg`).then(x => x.text()).then(x => {
+			return parser.parseFromString(x, "image/svg+xml");
+		});
+		const d = await documents[s.name];
+		this.appendChild(d.firstChild.cloneNode(true));
 	}
 }

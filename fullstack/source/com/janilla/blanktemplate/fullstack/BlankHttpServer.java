@@ -57,7 +57,7 @@ public class BlankHttpServer extends HttpServer {
 	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
 //		IO.println("BlankHttpServer.createExchange, request.getPath()=" + request.getPath());
 		var f = request.getPath().startsWith("/api/") ? backend.diFactory() : frontend.diFactory();
-		var x = f.create(HttpExchange.class, Map.of("request", request, "response", response));
+		var x = f.create(f.actualType(HttpExchange.class), Map.of("request", request, "response", response));
 		return x != null ? x : super.createExchange(request, response);
 	}
 }

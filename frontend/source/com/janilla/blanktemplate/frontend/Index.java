@@ -66,7 +66,7 @@ public interface Index {
 		@Override
 		public String apply(T value) {
 			return Json.format(
-					diFactory.create(ReflectionJsonIterator.class, Map.of("object", value, "includeType", true)));
+					diFactory.create(diFactory.actualType(ReflectionJsonIterator.class), Map.of("object", value, "includeType", true)));
 		}
 	}
 

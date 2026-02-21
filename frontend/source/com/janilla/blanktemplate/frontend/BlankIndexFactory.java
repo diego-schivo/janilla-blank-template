@@ -87,24 +87,20 @@ public class BlankIndexFactory {
 	}
 
 	protected void putImports(Map<String, String> map) {
-		Stream.of("app", "janilla-logo", "toaster", "web-component").map(this::baseImportKey)
+		Stream.of("app", "intl-format", "janilla-logo", "toaster", "web-component").map(this::baseImportKey)
 				.forEach(x -> map.put(x, "/" + x + ".js"));
-		Stream.of("lucide-icon").map(this::resourcesImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
 		Stream.of("admin", "admin-array", "admin-bar", "admin-checkbox", "admin-create-first-user", "admin-dashboard",
 				"admin-document", "admin-drawer", "admin-drawer-link", "admin-edit", "admin-fields", "admin-file",
 				"admin-forgot-password", "admin-hidden", "admin-join", "admin-list", "admin-login", "admin-radio-group",
 				"admin-relationship", "admin-rich-text", "admin-select", "admin-slug", "admin-tabs", "admin-text",
 				"admin-unauthorized", "admin-upload", "admin-version", "admin-versions").map(this::cmsImportKey)
 				.forEach(x -> map.put(x, "/" + x + ".js"));
-		Stream.of("app", "not-found", "page").map(this::blankImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
+		Stream.of("app", "lucide-icon", "not-found", "page").map(this::blankImportKey)
+				.forEach(x -> map.put(x, "/" + x + ".js"));
 	}
 
 	protected String baseImportKey(String name) {
 		return "base/" + name;
-	}
-
-	protected String resourcesImportKey(String name) {
-		return name;
 	}
 
 	protected String cmsImportKey(String name) {
