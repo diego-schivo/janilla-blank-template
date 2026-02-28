@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 import com.janilla.backend.cms.CmsResourceHandlerFactory;
 import com.janilla.backend.cms.AbstractCollectionApi;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.blanktemplate.Media;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpResponse;
 import com.janilla.web.Handle;
@@ -44,7 +45,7 @@ public class MediaApi extends AbstractCollectionApi<Long, Media> {
 
 	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
 			String configurationKey) {
-		super(Media.class, drafts, persistence);
+		super(Media.class, drafts, persistence, "title");
 		this.configuration = configuration;
 		this.configurationKey = configurationKey;
 	}

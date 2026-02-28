@@ -22,11 +22,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate;
 
-import com.janilla.backend.cms.UserRole;
+import java.time.Instant;
 
-public enum UserRoleImpl implements UserRole {
+import com.janilla.cms.Document;
+import com.janilla.cms.DocumentStatus;
+import com.janilla.persistence.Store;
 
-	ADMIN
+@Store
+public record Media(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
+		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
+
+	public String uri() {
+//		var a = BlankBackend.INSTANCE.get();
+		return file != null
+//				? (a.configuration().getProperty(a.configurationKey + ".api.url") + "/images/" + file.name())
+				? (Foo.PROPERTY_GETTER.get().apply("api.url") + "/images/" + file.name())
+				: null;
+	}
 }

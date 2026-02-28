@@ -8,6 +8,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>backend</module>
+		<module>base</module>
 		<module>frontend</module>
 		<module>fullstack</module>
 	</modules>

@@ -22,12 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-module com.janilla.blanktemplate.backend {
+package com.janilla.blanktemplate;
 
-	exports com.janilla.blanktemplate.backend;
+import com.janilla.cms.UserRole;
 
-	opens com.janilla.blanktemplate.backend;
+public enum UserRoleImpl implements UserRole {
 
-	requires transitive com.janilla.backend;
-	requires transitive com.janilla.blanktemplate.base;
+	ADMIN
 }

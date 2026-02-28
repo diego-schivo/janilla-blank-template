@@ -45,6 +45,7 @@ import javax.net.ssl.SSLContext;
 import com.janilla.backend.cms.Cms;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.backend.persistence.PersistenceBuilder;
+import com.janilla.blanktemplate.Foo;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
@@ -65,9 +66,7 @@ import com.janilla.web.RenderableFactory;
 public class BlankBackend {
 
 	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.backend.cms",
-			"com.janilla.blanktemplate.backend" };
-
-	public static final ScopedValue<BlankBackend> INSTANCE = ScopedValue.newInstance();
+			"com.janilla.blanktemplate", "com.janilla.blanktemplate.backend" };
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
@@ -194,15 +193,6 @@ public class BlankBackend {
 											Map.of("invocationResolver", InvocationResolver.INSTANCE.get()));
 						}));
 		renderableFactory = diFactory.create(diFactory.actualType(RenderableFactory.class));
-//		{
-//			var hf = diFactory.create(diFactory.actualType(ApplicationHandlerFactory.class));
-//			handler = x -> ScopedValue.where(INSTANCE, this).call(() -> {
-//				var h = hf.createHandler(x.exception() != null ? x.exception() : x.request());
-//				if (h == null)
-//					throw new NotFoundException(x.request().getMethod() + " " + x.request().getTarget());
-//				return h.handle(x);
-//			});
-//		}
 		handlerFactory = diFactory.create(diFactory.actualType(ApplicationHandlerFactory.class));
 		handler = this::handle;
 	}
@@ -265,13 +255,16 @@ public class BlankBackend {
 	}
 
 	protected boolean handle(HttpExchange exchange) {
-		return ScopedValue.where(INSTANCE, this).call(() -> {
-			var h = handlerFactory
-					.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());
-			if (h == null)
-				throw new NotFoundException(exchange.request().getMethod() + " " + exchange.request().getTarget());
-			return h.handle(exchange);
-		});
+//		IO.println("BlankBackend.handle, exchange=" + exchange);
+		return ScopedValue.where(Foo.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
+				.call(() -> {
+					var h = handlerFactory
+							.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());
+					if (h == null)
+						throw new NotFoundException(
+								exchange.request().getMethod() + " " + exchange.request().getTarget());
+					return h.handle(exchange);
+				});
 	}
 
 	protected boolean testDrafts(HttpExchange x) {

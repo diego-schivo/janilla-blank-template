@@ -40,6 +40,7 @@ import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.NullTypeResolver;
 import com.janilla.java.TypeResolver;
+import com.janilla.java.UriQueryBuilder;
 import com.janilla.web.HandleException;
 import com.janilla.web.Invocation;
 import com.janilla.web.InvocationHandlerFactory;
@@ -106,6 +107,8 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 			return false;
 		switch (request.getMethod()) {
 		case "GET", "OPTIONS":
+			if (request.getPath().equals("/api/users"))
+				return !"0".equals(new UriQueryBuilder(request.getQuery()).values("limit").findFirst().orElse(null));
 			return false;
 		case "POST":
 			return !guestPost.contains(request.getPath());

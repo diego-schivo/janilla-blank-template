@@ -31,6 +31,8 @@ import java.util.function.Predicate;
 import com.janilla.backend.cms.AbstractUserApi;
 import com.janilla.backend.cms.UserHttpExchange;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.blanktemplate.UserImpl;
+import com.janilla.blanktemplate.UserRoleImpl;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Handle;
 
@@ -39,7 +41,7 @@ public class UserApi extends AbstractUserApi<Long, UserImpl, UserRoleImpl> {
 
 	public UserApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
 			String configurationKey) {
-		super(UserImpl.class, drafts, persistence, configuration.getProperty(configurationKey + ".jwt.key"));
+		super(UserImpl.class, drafts, persistence, "title", configuration.getProperty(configurationKey + ".jwt.key"));
 	}
 
 	@Override

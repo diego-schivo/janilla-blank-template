@@ -70,9 +70,7 @@ public class BlankIndexFactory {
 	}
 
 	protected Map<String, Object> state(HttpExchange exchange) {
-		var x = new LinkedHashMap<String, Object>();
-//		x.put("user", ((BlankFrontendHttpExchange) exchange).sessionUser());
-		return x;
+		return new LinkedHashMap<String, Object>();
 	}
 
 	protected Map<String, String> imports() {
@@ -91,10 +89,11 @@ public class BlankIndexFactory {
 				.forEach(x -> map.put(x, "/" + x + ".js"));
 		Stream.of("admin", "admin-array", "admin-bar", "admin-checkbox", "admin-create-first-user", "admin-dashboard",
 				"admin-document", "admin-drawer", "admin-drawer-link", "admin-edit", "admin-fields", "admin-file",
-				"admin-forgot-password", "admin-hidden", "admin-join", "admin-list", "admin-login", "admin-radio-group",
-				"admin-relationship", "admin-rich-text", "admin-select", "admin-slug", "admin-tabs", "admin-text",
-				"admin-unauthorized", "admin-upload", "admin-version", "admin-versions").map(this::cmsImportKey)
-				.forEach(x -> map.put(x, "/" + x + ".js"));
+				"admin-forgot-password", "admin-hidden", "admin-join", "admin-list", "admin-login",
+				"admin-page-controls", "admin-pagination", "admin-per-page", "admin-radio-group", "admin-relationship",
+				"admin-rich-text", "admin-search-bar", "admin-search-filter", "admin-select", "admin-slug",
+				"admin-tabs", "admin-text", "admin-unauthorized", "admin-upload", "admin-version", "admin-versions")
+				.map(this::cmsImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
 		Stream.of("app", "lucide-icon", "not-found", "page").map(this::blankImportKey)
 				.forEach(x -> map.put(x, "/" + x + ".js"));
 	}

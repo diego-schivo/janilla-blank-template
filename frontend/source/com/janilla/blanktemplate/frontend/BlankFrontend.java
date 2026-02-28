@@ -32,21 +32,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
+import com.janilla.blanktemplate.Foo;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
+import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
+import com.janilla.java.TypeResolver;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Invocable;
 import com.janilla.web.InvocationResolver;
@@ -56,9 +61,8 @@ import com.janilla.web.ResourceMap;
 
 public class BlankFrontend {
 
-	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.blanktemplate.frontend" };
-
-	public static final ScopedValue<BlankFrontend> INSTANCE = ScopedValue.newInstance();
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.blanktemplate",
+			"com.janilla.blanktemplate.frontend" };
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
@@ -132,7 +136,11 @@ public class BlankFrontend {
 
 	protected final RenderableFactory renderableFactory;
 
+	protected final List<Class<?>> resolvables;
+
 	protected final ResourceMap resourceMap;
+
+	protected final TypeResolver typeResolver;
 
 	public BlankFrontend(DiFactory diFactory, Path configurationFile) {
 		this(diFactory, configurationFile, "blank-template");
@@ -145,6 +153,14 @@ public class BlankFrontend {
 		diFactory.context(this);
 		configuration = diFactory.create(diFactory.actualType(Properties.class),
 				Collections.singletonMap("file", configurationFile));
+
+		{
+			Map<String, Class<?>> m = diFactory.types().stream()
+					.collect(Collectors.toMap(x -> x.getSimpleName(), x -> x, (_, x) -> x, LinkedHashMap::new));
+//			IO.println("m=" + m);
+			resolvables = m.values().stream().toList();
+		}
+		typeResolver = diFactory.create(diFactory.actualType(DollarTypeResolver.class));
 
 		httpClient = diFactory.create(diFactory.actualType(HttpClient.class),
 				Map.of("sslContext", sslContext(configuration, configurationKey)));
@@ -207,18 +223,28 @@ public class BlankFrontend {
 		return renderableFactory;
 	}
 
+	public List<Class<?>> resolvables() {
+		return resolvables;
+	}
+
 	public ResourceMap resourceMap() {
 		return resourceMap;
 	}
 
+	public TypeResolver typeResolver() {
+		return typeResolver;
+	}
+
 	protected boolean handle(HttpExchange exchange) {
-		return ScopedValue.where(INSTANCE, this).call(() -> {
-			var h = handlerFactory
-					.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());
-			if (h == null)
-				throw new NotFoundException(exchange.request().getMethod() + " " + exchange.request().getTarget());
-			return h.handle(exchange);
-		});
+		return ScopedValue.where(Foo.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
+				.call(() -> {
+					var h = handlerFactory
+							.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());
+					if (h == null)
+						throw new NotFoundException(
+								exchange.request().getMethod() + " " + exchange.request().getTarget());
+					return h.handle(exchange);
+				});
 	}
 
 	protected Map<String, List<Path>> resourcePaths() {

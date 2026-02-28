@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import com.janilla.backend.cms.AbstractUserHttpExchange;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.blanktemplate.UserImpl;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 

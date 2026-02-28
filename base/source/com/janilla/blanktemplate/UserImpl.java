@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate;
 
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -36,8 +36,8 @@ import java.util.Set;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import com.janilla.backend.cms.User;
 import com.janilla.cms.DocumentStatus;
+import com.janilla.cms.User;
 import com.janilla.persistence.Index;
 import com.janilla.persistence.Store;
 

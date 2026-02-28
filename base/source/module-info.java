@@ -22,22 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+module com.janilla.blanktemplate.base {
 
-import java.time.Instant;
+	exports com.janilla.blanktemplate;
 
-import com.janilla.cms.Document;
-import com.janilla.cms.DocumentStatus;
-import com.janilla.persistence.Store;
+	opens com.janilla.blanktemplate;
 
-@Store
-public record Media(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
-		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
-
-	public String uri() {
-		var a = BlankBackend.INSTANCE.get();
-		return file != null
-				? (a.configuration().getProperty(a.configurationKey + ".api.url") + "/images/" + file.name())
-				: null;
-	}
+	requires transitive com.janilla.base;
 }

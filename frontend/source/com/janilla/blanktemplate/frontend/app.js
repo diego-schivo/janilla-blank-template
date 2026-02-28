@@ -62,7 +62,7 @@ export default class App extends BaseApp {
                 admin: {
                     $template: "admin",
                     user: this.currentUser ? JSON.stringify(this.currentUser) : null,
-                    path: m[1] ?? "/"
+                    uri: (m[1] ?? "/") + location.search
                 }
             }));
         else
@@ -100,7 +100,14 @@ export default class App extends BaseApp {
         }))
             if (k === "title")
                 document.title = v ?? "";
-        //else
-        //	document.querySelector(`meta[name="${k}"]`).setAttribute("content", v ?? "");
+            else {
+                const el = document.querySelector(`meta[name="${k}"]`) ?? (() => {
+					const x = document.createElement("meta");
+					x.setAttribute("name", k);
+					document.head.append(x);
+					return x;
+				})();
+				el.setAttribute("content", v ?? "");
+            }
     }
 }
