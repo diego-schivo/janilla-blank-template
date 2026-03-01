@@ -22,19 +22,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
-
-import java.nio.file.Path;
-import java.util.Properties;
-
-import com.janilla.backend.cms.CmsResourceHandlerFactory;
-
-public class BlankBackendResourceHandlerFactory extends CmsResourceHandlerFactory {
-
-	public BlankBackendResourceHandlerFactory(Properties configuration, String configurationKey) {
-		var d = configuration.getProperty(configurationKey + ".upload.directory");
-		if (d.startsWith("~"))
-			d = System.getProperty("user.home") + d.substring(1);
-		super(Path.of(d));
-	}
-}
+//package com.janilla.blanktemplate.backend;
+//
+//import java.nio.file.Path;
+//import java.util.Properties;
+//
+//import com.janilla.backend.cms.CmsResourceHandlerFactory;
+//
+//public class BlankBackendResourceHandlerFactory extends CmsResourceHandlerFactory {
+//
+//	public BlankBackendResourceHandlerFactory(Properties configuration, String configurationKey) {
+//		var d = configuration.getProperty(configurationKey + ".upload.directory");
+//		if (d.startsWith("~"))
+//			d = System.getProperty("user.home") + d.substring(1);
+//		super(Path.of(d));
+//	}
+//}

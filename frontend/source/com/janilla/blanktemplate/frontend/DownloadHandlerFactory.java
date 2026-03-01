@@ -122,7 +122,6 @@ public class DownloadHandlerFactory implements HttpHandlerFactory {
 		var rs = exchange.response();
 		rs.setStatus(200);
 		rs.setHeaderValue("cache-control", "max-age=3600");
-
 		{
 			var n = file.getFileName().toString();
 			var i = n.lastIndexOf('.');
@@ -134,9 +133,9 @@ public class DownloadHandlerFactory implements HttpHandlerFactory {
 			case "svg" -> "image/svg+xml";
 			default -> null;
 			} : null;
-			rs.setHeaderValue("content-type", t);
+			if (t != null)
+				rs.setHeaderValue("content-type", t);
 		}
-
 		rs.setHeaderValue("content-length", String.valueOf(bb.length));
 
 		try {

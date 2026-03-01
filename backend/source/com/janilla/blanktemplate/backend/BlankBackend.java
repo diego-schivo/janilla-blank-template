@@ -43,9 +43,10 @@ import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
 
 import com.janilla.backend.cms.Cms;
+import com.janilla.backend.cms.Foo;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.backend.persistence.PersistenceBuilder;
-import com.janilla.blanktemplate.Foo;
+import com.janilla.blanktemplate.Configuration;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
@@ -131,6 +132,8 @@ public class BlankBackend {
 
 	protected final DiFactory diFactory;
 
+	protected final Foo foo;
+
 	protected final HttpHandler handler;
 
 	protected final boolean includeType;
@@ -168,6 +171,19 @@ public class BlankBackend {
 		typeResolver = diFactory.create(diFactory.actualType(DollarTypeResolver.class));
 
 		storables = resolvables.stream().filter(x -> x.isAnnotationPresent(Store.class)).toList();
+		{
+			var x = configuration.getProperty(configurationKey + ".upload.directory");
+			if (x.startsWith("~"))
+				x = System.getProperty("user.home") + x.substring(1);
+			var d = Path.of(x);
+			if (!Files.exists(d))
+				try {
+					Files.createDirectories(d);
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			foo = diFactory.create(Foo.class, Map.of("directory", d));
+		}
 		{
 			var f = configuration.getProperty(configurationKey + ".database.file");
 			if (f.startsWith("~"))
@@ -213,6 +229,10 @@ public class BlankBackend {
 		return diFactory;
 	}
 
+	public Foo foo() {
+		return foo;
+	}
+
 	public HttpHandler handler() {
 		return handler;
 	}
@@ -256,7 +276,8 @@ public class BlankBackend {
 
 	protected boolean handle(HttpExchange exchange) {
 //		IO.println("BlankBackend.handle, exchange=" + exchange);
-		return ScopedValue.where(Foo.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
+		return ScopedValue
+				.where(Configuration.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
 				.call(() -> {
 					var h = handlerFactory
 							.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());

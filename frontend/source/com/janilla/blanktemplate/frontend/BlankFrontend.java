@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.blanktemplate.Foo;
+import com.janilla.blanktemplate.Configuration;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
@@ -236,7 +236,7 @@ public class BlankFrontend {
 	}
 
 	protected boolean handle(HttpExchange exchange) {
-		return ScopedValue.where(Foo.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
+		return ScopedValue.where(Configuration.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
 				.call(() -> {
 					var h = handlerFactory
 							.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());

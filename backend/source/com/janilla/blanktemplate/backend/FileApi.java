@@ -26,40 +26,29 @@ package com.janilla.blanktemplate.backend;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
 
 import com.janilla.backend.cms.Cms;
+import com.janilla.backend.cms.Foo;
 import com.janilla.http.HttpRequest;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/files")
 public class FileApi {
 
-	protected final Properties configuration;
+	protected final Foo foo;
 
-	protected final String configurationKey;
-
-	public FileApi(Properties configuration, String configurationKey) {
-		this.configuration = configuration;
-		this.configurationKey = configurationKey;
+	public FileApi(Foo foo) {
+		this.foo = foo;
 	}
 
 	@Handle(method = "POST", path = "upload")
-	public void create(HttpRequest request) throws IOException {
+	public void upload(HttpRequest request) throws IOException {
 		var ff = Cms.files(request);
-		for (var x : ff.entrySet()) {
-			Path d;
-			{
-				var y = configuration.getProperty(configurationKey + ".upload.directory");
-				if (y.startsWith("~"))
-					y = System.getProperty("user.home") + y.substring(1);
-				d = Path.of(y);
-			}
-			if (!Files.exists(d))
-				Files.createDirectories(d);
-			var f = d.resolve(x.getKey());
-			var bb = x.getValue();
+		for (var nbb : ff.entrySet()) {
+			var n = nbb.getKey();
+			var bb = nbb.getValue();
+
+			var f = foo.directory().resolve(n);
 			Files.write(f, bb);
 		}
 	}

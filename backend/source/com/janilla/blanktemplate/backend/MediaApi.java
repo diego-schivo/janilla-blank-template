@@ -25,11 +25,10 @@
 package com.janilla.blanktemplate.backend;
 
 import java.nio.file.Path;
-import java.util.Properties;
 import java.util.function.Predicate;
 
-import com.janilla.backend.cms.CmsResourceHandlerFactory;
 import com.janilla.backend.cms.AbstractCollectionApi;
+import com.janilla.backend.cms.Foo;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.blanktemplate.Media;
 import com.janilla.http.HttpExchange;
@@ -39,27 +38,15 @@ import com.janilla.web.Handle;
 @Handle(path = "/api/media")
 public class MediaApi extends AbstractCollectionApi<Long, Media> {
 
-	protected final Properties configuration;
+	protected final Foo foo;
 
-	protected final String configurationKey;
-
-	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
-			String configurationKey) {
+	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Foo foo) {
 		super(Media.class, drafts, persistence, "title");
-		this.configuration = configuration;
-		this.configurationKey = configurationKey;
+		this.foo = foo;
 	}
 
 	@Handle(method = "GET", path = "file/(.+)")
 	public void file(Path path, HttpResponse response) {
-		Path d;
-		{
-			var x = configuration.getProperty(configurationKey + ".upload.directory");
-			if (x.startsWith("~"))
-				x = System.getProperty("user.home") + x.substring(1);
-			d = Path.of(x);
-		}
-		var f = d.resolve(path.getFileName());
-		CmsResourceHandlerFactory.handle(f, response);
+		foo.handle(path, response);
 	}
 }
