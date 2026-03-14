@@ -1,8 +1,8 @@
 /*
  * MIT License
  *
- * Copyright (c) 2018-2025 Payload CMS, Inc. <info@payloadcms.com>
- * Copyright (c) 2024-2026 Diego Schivo <diego.schivo@janilla.com>
+ * Copyright (c) 2024 Vercel, Inc.
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.backend;
+package com.janilla.blanktemplate.test;
 
-import java.util.Properties;
+import java.net.SocketAddress;
+import java.util.Map;
 
-import com.janilla.backend.cms.AbstractUserHttpExchange;
-import com.janilla.backend.persistence.Crud;
-import com.janilla.backend.persistence.Persistence;
-import com.janilla.cms.User;
+import javax.net.ssl.SSLContext;
+
+import com.janilla.blanktemplate.fullstack.BlankFullstack;
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
+import com.janilla.http.HttpServer;
 
-public class BackendHttpExchange extends AbstractUserHttpExchange<User<?>> {
+public class CustomHttpServer extends HttpServer {
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public BackendHttpExchange(HttpRequest request, HttpResponse response, Properties configuration,
-			String configurationKey, Persistence persistence) {
-		super(request, response, configuration.getProperty(configurationKey + ".jwt.cookie"),
-				configuration.getProperty(configurationKey + ".jwt.key"), (Crud) persistence.crud(User.class));
+	protected final BlankFullstack fullstack;
+
+	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler,
+			BlankFullstack fullstack) {
+		super(sslContext, endpoint, handler);
+		this.fullstack = fullstack;
+	}
+
+	@Override
+	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
+		if (Test.ONGOING.get()) {
+			var f = request.getPath().startsWith("/api/") ? fullstack.backend().diFactory()
+					: fullstack.frontend().diFactory();
+			return f.newInstance(f.classFor(HttpExchange.class), Map.of("request", request, "response", response));
+		}
+		return super.createExchange(request, response);
 	}
 }

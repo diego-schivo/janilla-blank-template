@@ -24,113 +24,59 @@
  */
 package com.janilla.blanktemplate.frontend;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import com.janilla.blanktemplate.frontend.Index.Template;
+import com.janilla.frontend.Index;
+import com.janilla.frontend.Template;
+import com.janilla.frontend.cms.CmsDataFetching;
+import com.janilla.frontend.cms.CmsIndexFactory;
 import com.janilla.http.HttpExchange;
-import com.janilla.web.DefaultResource;
 import com.janilla.web.ResourceMap;
 
-public class BlankIndexFactory {
+public class BlankIndexFactory extends CmsIndexFactory {
 
 	protected final Properties configuration;
 
 	protected final String configurationKey;
 
-	protected final BlankDataFetching dataFetching;
-
-	protected final ResourceMap resourceMap;
-
-	protected Map<String, String> imports;
-
-	protected List<Template> templates;
-
-	public BlankIndexFactory(Properties configuration, String configurationKey, BlankDataFetching dataFetching,
-			ResourceMap resourceMap) {
+	public BlankIndexFactory(ResourceMap resourceMap, CmsDataFetching dataFetching, Properties configuration,
+			String configurationKey) {
+		super(resourceMap, dataFetching);
 		this.configuration = configuration;
 		this.configurationKey = configurationKey;
-		this.dataFetching = dataFetching;
-		this.resourceMap = resourceMap;
 	}
 
-	public Index index(HttpExchange exchange) {
-		return new IndexImpl(configuration.getProperty(configurationKey + ".title"), imports(), configurationKey,
-				configuration.getProperty(configurationKey + ".api.url"), state(exchange), templates());
+	@Override
+	public Index newIndex(HttpExchange exchange) {
+		return new IndexImpl(configuration.getProperty(configurationKey + ".title"), imports(), scripts(),
+				new AppImpl(configuration.getProperty(configurationKey + ".api.url"), state(exchange)), templates());
 	}
 
 	public Template blankTemplate(String name) {
 		return template(name);
 	}
 
-	protected Map<String, Object> state(HttpExchange exchange) {
-		return new LinkedHashMap<String, Object>();
-	}
-
-	protected Map<String, String> imports() {
-		if (imports == null)
-			synchronized (this) {
-				if (imports == null) {
-					imports = new LinkedHashMap<String, String>();
-					putImports(imports);
-				}
-			}
-		return imports;
-	}
-
+	@Override
 	protected void putImports(Map<String, String> map) {
-		Stream.of("app", "intl-format", "janilla-logo", "toaster", "web-component").map(this::baseImportKey)
-				.forEach(x -> map.put(x, "/" + x + ".js"));
-		Stream.of("admin", "admin-array", "admin-bar", "admin-checkbox", "admin-create-first-user", "admin-dashboard",
-				"admin-document", "admin-drawer", "admin-drawer-link", "admin-edit", "admin-fields", "admin-file",
-				"admin-forgot-password", "admin-hidden", "admin-join", "admin-list", "admin-login",
-				"admin-page-controls", "admin-pagination", "admin-per-page", "admin-radio-group", "admin-relationship",
-				"admin-rich-text", "admin-search-bar", "admin-search-filter", "admin-select", "admin-slug",
-				"admin-tabs", "admin-text", "admin-unauthorized", "admin-upload", "admin-version", "admin-versions")
-				.map(this::cmsImportKey).forEach(x -> map.put(x, "/" + x + ".js"));
+		super.putImports(map);
 		Stream.of("app", "lucide-icon", "not-found", "page").map(this::blankImportKey)
 				.forEach(x -> map.put(x, "/" + x + ".js"));
 	}
 
+	@Override
 	protected String baseImportKey(String name) {
 		return "base/" + name;
-	}
-
-	protected String cmsImportKey(String name) {
-		return name;
 	}
 
 	protected String blankImportKey(String name) {
 		return name;
 	}
 
-	protected List<Template> templates() {
-		if (templates == null)
-			synchronized (this) {
-				if (templates == null) {
-					templates = new ArrayList<Template>();
-					addTemplates(templates);
-				}
-			}
-		return templates;
-	}
-
+	@Override
 	protected void addTemplates(List<Template> list) {
 		Stream.of("app", "not-found", "page").map(this::blankTemplate).forEach(list::add);
-	}
-
-	protected Template template(String name) {
-		var f = (DefaultResource) resourceMap.get("/" + name + ".html");
-		try (var in = f != null ? f.newInputStream() : null) {
-			return in != null ? new Template(name, new String(in.readAllBytes())) : null;
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
 	}
 }

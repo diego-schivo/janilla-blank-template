@@ -24,7 +24,10 @@
  */
 package com.janilla.blanktemplate;
 
-public interface File {
+import java.time.Instant;
 
-	String name();
+import com.janilla.cms.DocumentStatus;
+
+record MediaImpl(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
+		DocumentStatus documentStatus, Instant publishedAt) implements Media {
 }

@@ -22,9 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate;
+module com.janilla.blanktemplate.test {
 
-public interface File {
+	exports com.janilla.blanktemplate.test;
 
-	String name();
+	opens com.janilla.blanktemplate.test;
+
+	requires transitive com.janilla.blanktemplate.fullstack;
 }

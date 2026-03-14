@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -46,16 +45,29 @@ import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
+import com.janilla.ioc.DefaultDiFactory;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
 
 public class BlankFullstack {
 
+	public static final String[] DI_BACKEND_PACKAGES = Stream
+			.concat(Arrays.stream(BlankBackend.DI_PACKAGES), Stream.of("com.janilla.blanktemplate.fullstack"))
+			.toArray(String[]::new);
+
+	public static final String[] DI_FRONTEND_PACKAGES = Stream
+			.concat(Arrays.stream(BlankFrontend.DI_PACKAGES), Stream.of("com.janilla.blanktemplate.fullstack"))
+			.toArray(String[]::new);
+
+	public static final String[] DI_PACKAGES = { "com.janilla.blanktemplate.fullstack" };
+
 	public static final ScopedValue<BlankFullstack> INSTANCE = ScopedValue.newInstance();
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
-		var f = new DiFactory(Java.getPackageClasses(BlankFullstack.class.getPackageName(), true), "fullstack");
+		var f = new DefaultDiFactory(
+				Arrays.stream(DI_PACKAGES).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(),
+				"fullstack");
 		serve(f, BlankFullstack.class, args.length > 0 ? args[0] : null);
 	}
 
@@ -63,7 +75,7 @@ public class BlankFullstack {
 			String configurationPath) {
 		T a;
 		{
-			a = diFactory.create(applicationType,
+			a = diFactory.newInstance(applicationType,
 					Java.hashMap("diFactory", diFactory, "configurationFile",
 							configurationPath != null ? Path.of(configurationPath.startsWith("~")
 									? System.getProperty("user.home") + configurationPath.substring(1)
@@ -97,7 +109,7 @@ public class BlankFullstack {
 		HttpServer s;
 		{
 			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey + ".server.port"));
-			s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
+			s = a.diFactory.newInstance(a.diFactory.classFor(HttpServer.class),
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
 		s.serve();
@@ -126,7 +138,7 @@ public class BlankFullstack {
 		this.configurationFile = configurationFile;
 		this.configurationKey = configurationKey;
 		diFactory.context(this);
-		configuration = diFactory.create(diFactory.actualType(Properties.class),
+		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
 
 		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
@@ -137,13 +149,16 @@ public class BlankFullstack {
 			}
 		});
 		backend = ScopedValue.where(INSTANCE, this).call(() -> {
-			var f = new DiFactory(backendTypes(), "backend");
-			return f.create(f.actualType(BlankBackend.class),
+			var f = new DefaultDiFactory(
+					Arrays.stream(diBackendPackages()).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(),
+					"backend");
+			return f.newInstance(f.classFor(BlankBackend.class),
 					Java.hashMap("diFactory", f, "configurationFile", cf, "configurationKey", configurationKey));
 		});
 		frontend = ScopedValue.where(INSTANCE, this).call(() -> {
-			var f = new DiFactory(frontendTypes(), "frontend");
-			return f.create(f.actualType(BlankFrontend.class),
+			var f = new DefaultDiFactory(Arrays.stream(diFrontendPackages())
+					.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(), "frontend");
+			return f.newInstance(f.classFor(BlankFrontend.class),
 					Java.hashMap("diFactory", f, "configurationFile", cf, "configurationKey", configurationKey));
 		});
 
@@ -174,14 +189,12 @@ public class BlankFullstack {
 		return handler;
 	}
 
-	protected List<Class<?>> backendTypes() {
-		return Stream.concat(Arrays.stream(BlankBackend.DI_PACKAGES), Stream.of("com.janilla.blanktemplate.fullstack"))
-				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList();
+	protected String[] diBackendPackages() {
+		return DI_BACKEND_PACKAGES;
 	}
 
-	protected List<Class<?>> frontendTypes() {
-		return Stream.concat(Arrays.stream(BlankFrontend.DI_PACKAGES), Stream.of("com.janilla.blanktemplate.fullstack"))
-				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList();
+	protected String[] diFrontendPackages() {
+		return DI_FRONTEND_PACKAGES;
 	}
 
 	protected boolean handle(HttpExchange exchange) {

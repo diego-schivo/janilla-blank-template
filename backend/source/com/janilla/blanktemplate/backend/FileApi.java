@@ -28,17 +28,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import com.janilla.backend.cms.Cms;
-import com.janilla.backend.cms.Foo;
+import com.janilla.backend.cms.CmsResourceHandling;
 import com.janilla.http.HttpRequest;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/files")
 public class FileApi {
 
-	protected final Foo foo;
+	protected final CmsResourceHandling handling;
 
-	public FileApi(Foo foo) {
-		this.foo = foo;
+	public FileApi(CmsResourceHandling cmsResourceHandling) {
+		this.handling = cmsResourceHandling;
 	}
 
 	@Handle(method = "POST", path = "upload")
@@ -48,7 +48,7 @@ public class FileApi {
 			var n = nbb.getKey();
 			var bb = nbb.getValue();
 
-			var f = foo.directory().resolve(n);
+			var f = handling.directory().resolve(n);
 			Files.write(f, bb);
 		}
 	}

@@ -38,13 +38,11 @@ import javax.crypto.spec.PBEKeySpec;
 
 import com.janilla.cms.DocumentStatus;
 import com.janilla.cms.User;
-import com.janilla.persistence.Index;
-import com.janilla.persistence.Store;
+import com.janilla.cms.UserRole;
 
-@Store
-public record UserImpl(Long id, String name, @Index String email, String salt, String hash,
-		@Index String resetPasswordToken, Instant resetPasswordExpiration, Set<UserRoleImpl> roles, Instant createdAt,
-		Instant updatedAt, DocumentStatus documentStatus, Instant publishedAt) implements User<Long, UserRoleImpl> {
+record UserImpl(Long id, String name, String email, String salt, String hash, String resetPasswordToken,
+		Instant resetPasswordExpiration, Set<UserRole> roles, Instant createdAt, Instant updatedAt,
+		DocumentStatus documentStatus, Instant publishedAt) implements User<Long> {
 
 	private static final SecretKeyFactory SECRET;
 
@@ -70,7 +68,7 @@ public record UserImpl(Long id, String name, @Index String email, String salt, S
 	}
 
 	@Override
-	public boolean hasRole(UserRoleImpl role) {
+	public boolean hasRole(UserRole role) {
 		return roles != null && roles.contains(role);
 	}
 
@@ -102,7 +100,7 @@ public record UserImpl(Long id, String name, @Index String email, String salt, S
 	}
 
 	@Override
-	public UserImpl withRoles(Set<UserRoleImpl> roles) {
+	public UserImpl withRoles(Set<UserRole> roles) {
 		return new UserImpl(id, name, email, salt, hash, resetPasswordToken, resetPasswordExpiration, roles, createdAt,
 				updatedAt, documentStatus, publishedAt);
 	}

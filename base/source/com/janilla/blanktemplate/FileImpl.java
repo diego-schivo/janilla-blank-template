@@ -24,7 +24,5 @@
  */
 package com.janilla.blanktemplate;
 
-public interface File {
-
-	String name();
+record FileImpl(String name) implements File {
 }

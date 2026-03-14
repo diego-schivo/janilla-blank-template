@@ -22,55 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.frontend;
+package com.janilla.blanktemplate.test;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
 
-import com.janilla.ioc.DiFactory;
-import com.janilla.json.Json;
-import com.janilla.json.ReflectionJsonIterator;
-import com.janilla.web.Render;
-import com.janilla.web.Renderer;
+public class CustomProperties extends Properties {
 
-public interface Index {
+	private static final long serialVersionUID = 6296824129286674444L;
 
-	String title();
-
-	Map<String, String> imports();
-
-	String key();
-
-	String apiUrl();
-
-	Map<String, Object> state();
-
-	List<Template> templates();
-
-	public static class JsonRenderer<T> extends Renderer<T> {
-
-		@Override
-		public String apply(T value) {
-			return Json.format(value);
+	public CustomProperties(Path file) {
+		try {
+			try (var x = BlankTest.class.getResourceAsStream("configuration.properties")) {
+				load(x);
+			}
+			if (file != null)
+				try (var x = Files.newInputStream(file)) {
+					load(x);
+				}
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
-	}
-
-	public static class StateRenderer<T> extends Renderer<T> {
-
-		protected final DiFactory diFactory;
-
-		public StateRenderer(DiFactory diFactory) {
-			this.diFactory = diFactory;
-		}
-
-		@Override
-		public String apply(T value) {
-			return Json.format(
-					diFactory.create(diFactory.actualType(ReflectionJsonIterator.class), Map.of("object", value, "includeType", true)));
-		}
-	}
-
-	@Render(template = "template")
-	public record Template(String id, String content) {
 	}
 }

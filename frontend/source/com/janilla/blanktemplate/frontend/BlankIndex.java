@@ -22,9 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate;
-
-public interface File {
-
-	String name();
-}
+//package com.janilla.blanktemplate.frontend;
+//
+//import com.janilla.frontend.Index;
+//
+//public interface BlankIndex extends Index {
+//
+//	String key();
+//}

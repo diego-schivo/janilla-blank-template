@@ -31,10 +31,26 @@ import com.janilla.cms.DocumentStatus;
 import com.janilla.persistence.Store;
 
 @Store
-public record Media(Long id, File file, String alt, String caption, Instant createdAt, Instant updatedAt,
-		DocumentStatus documentStatus, Instant publishedAt) implements Document<Long> {
+public interface Media extends Document<Long> {
 
-	public String uri() {
-		return file != null ? (Configuration.PROPERTY_GETTER.get().apply("api.url") + "/media/" + file.name()) : null;
+	Long id();
+
+	File file();
+
+	String alt();
+
+	String caption();
+
+	Instant createdAt();
+
+	Instant updatedAt();
+
+	DocumentStatus documentStatus();
+
+	Instant publishedAt();
+
+	default String uri() {
+		var f = file();
+		return f != null ? (Configuration.PROPERTY_GETTER.get().apply("api.url") + "/media/" + f.name()) : null;
 	}
 }

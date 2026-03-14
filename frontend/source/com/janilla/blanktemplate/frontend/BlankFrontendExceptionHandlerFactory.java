@@ -50,8 +50,8 @@ public class BlankFrontendExceptionHandlerFactory extends ExceptionHandlerFactor
 //		IO.println(
 //				"CustomExceptionHandlerFactory.handle, " + exchange.request().getPath() + ", " + exchange.exception());
 		super.handle(error, exchange);
-		var i = indexFactory.index(exchange);
-		i.state().put("error", error);
+		var i = indexFactory.newIndex(exchange);
+		i.app().state().put("error", error);
 		var r = renderableFactory.createRenderable(null, i);
 		var h = rootFactory.createHandler(r);
 		return h.handle(exchange);

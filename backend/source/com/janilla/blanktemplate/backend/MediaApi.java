@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.function.Predicate;
 
 import com.janilla.backend.cms.AbstractCollectionApi;
-import com.janilla.backend.cms.Foo;
+import com.janilla.backend.cms.CmsResourceHandling;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.blanktemplate.Media;
 import com.janilla.http.HttpExchange;
@@ -38,15 +38,15 @@ import com.janilla.web.Handle;
 @Handle(path = "/api/media")
 public class MediaApi extends AbstractCollectionApi<Long, Media> {
 
-	protected final Foo foo;
+	protected final CmsResourceHandling handling;
 
-	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, Foo foo) {
+	public MediaApi(Predicate<HttpExchange> drafts, Persistence persistence, CmsResourceHandling cmsResourceHandling) {
 		super(Media.class, drafts, persistence, "title");
-		this.foo = foo;
+		this.handling = cmsResourceHandling;
 	}
 
 	@Handle(method = "GET", path = "file/(.+)")
 	public void file(Path path, HttpResponse response) {
-		foo.handle(path, response);
+		handling.handle(path, response);
 	}
 }

@@ -53,19 +53,16 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 
 	protected final String configurationKey;
 
-	protected final DiFactory diFactory;
-
 	protected final Set<String> guestPost;
 
 	protected final Set<String> userLoginLogout;
 
 	public BlankBackendInvocationHandlerFactory(InvocationResolver invocationResolver,
-			RenderableFactory renderableFactory, HttpHandlerFactory rootFactory, Properties configuration,
-			String configurationKey, DiFactory diFactory) {
-		super(invocationResolver, renderableFactory, rootFactory);
+			RenderableFactory renderableFactory, HttpHandlerFactory rootFactory, DiFactory diFactory,
+			Properties configuration, String configurationKey) {
+		super(invocationResolver, renderableFactory, rootFactory, diFactory);
 		this.configuration = configuration;
 		this.configurationKey = configurationKey;
-		this.diFactory = diFactory;
 		guestPost = Stream.of("/api/users/first-register", "/api/users/forgot-password", "/api/users/login",
 				"/api/users/reset-password").collect(Collectors.toCollection(HashSet::new));
 		userLoginLogout = Stream.of("/api/users/login", "/api/users/logout")
@@ -119,11 +116,10 @@ public class BlankBackendInvocationHandlerFactory extends InvocationHandlerFacto
 
 	@Override
 	protected Converter converter(Class<? extends TypeResolver> type) {
-		return diFactory
-				.create(Converter.class,
-						type != DollarTypeResolver.class
-								? Collections.singletonMap("typeResolver",
-										type != null && type != NullTypeResolver.class ? diFactory.create(type) : null)
-								: null);
+		return diFactory.newInstance(Converter.class,
+				type != DollarTypeResolver.class
+						? Collections.singletonMap("typeResolver",
+								type != null && type != NullTypeResolver.class ? diFactory.newInstance(type) : null)
+						: null);
 	}
 }

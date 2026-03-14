@@ -35,6 +35,6 @@ public class BlankHttpClient extends DirectHttpClient {
 
 	public BlankHttpClient() {
 		var b = BlankFullstack.INSTANCE.get().backend();
-		super(b.diFactory().create(HttpServer.class, Map.of("handler", b.handler())));
+		super(b.diFactory().newInstance(HttpServer.class, Map.of("handler", b.handler())));
 	}
 }

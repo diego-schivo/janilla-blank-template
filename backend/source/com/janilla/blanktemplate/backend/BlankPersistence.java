@@ -8,7 +8,7 @@ import com.janilla.backend.persistence.CrudObserver;
 import com.janilla.backend.sqlite.SqliteDatabase;
 import com.janilla.blanktemplate.Media;
 import com.janilla.ioc.DiFactory;
-import com.janilla.java.TypeResolver;
+import com.janilla.java.Converter;
 import com.janilla.persistence.Entity;
 
 public class BlankPersistence extends CmsPersistence {
@@ -16,9 +16,10 @@ public class BlankPersistence extends CmsPersistence {
 	protected final DiFactory diFactory;
 
 	public BlankPersistence(SqliteDatabase database, List<Class<? extends Entity<?>>> storables,
-			TypeResolver typeResolver, DiFactory diFactory) {
+//			TypeResolver typeResolver,
+			Converter converter, DiFactory diFactory) {
 		this.diFactory = diFactory;
-		super(database, storables, typeResolver);
+		super(database, storables, converter);
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class BlankPersistence extends CmsPersistence {
 				t = null;
 			if (t != null) {
 				@SuppressWarnings("unchecked")
-				var o = (CrudObserver<E>) diFactory.create(t);
+				var o = (CrudObserver<E>) diFactory.newInstance(t);
 				c.observers().add(o);
 			}
 		}

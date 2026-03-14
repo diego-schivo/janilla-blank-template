@@ -33,7 +33,7 @@ export default class App extends BaseApp {
     }
 
     static get templateNames() {
-        return ["app"];
+        return ["/base/app", "app"];
     }
 
     get currentUser() {
@@ -102,12 +102,12 @@ export default class App extends BaseApp {
                 document.title = v ?? "";
             else {
                 const el = document.querySelector(`meta[name="${k}"]`) ?? (() => {
-					const x = document.createElement("meta");
-					x.setAttribute("name", k);
-					document.head.append(x);
-					return x;
-				})();
-				el.setAttribute("content", v ?? "");
+                    const x = document.createElement("meta");
+                    x.setAttribute("name", k);
+                    document.head.append(x);
+                    return x;
+                })();
+                el.setAttribute("content", v ?? "");
             }
     }
 }

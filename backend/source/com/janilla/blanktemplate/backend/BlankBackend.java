@@ -36,25 +36,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.backend.cms.Cms;
-import com.janilla.backend.cms.Foo;
+import com.janilla.backend.cms.CmsResourceHandling;
+import com.janilla.backend.cms.CmsSchema;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.backend.persistence.PersistenceBuilder;
+import com.janilla.blanktemplate.BlankConstants;
 import com.janilla.blanktemplate.Configuration;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpServer;
+import com.janilla.ioc.DefaultDiFactory;
 import com.janilla.ioc.DiFactory;
+import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
+import com.janilla.java.JavaReflect;
 import com.janilla.java.TypeResolver;
 import com.janilla.persistence.Store;
 import com.janilla.web.ApplicationHandlerFactory;
@@ -71,7 +76,7 @@ public class BlankBackend {
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
-		var f = new DiFactory(
+		var f = new DefaultDiFactory(
 				Arrays.stream(DI_PACKAGES).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
 		serve(f, BlankBackend.class, args.length > 0 ? args[0] : null);
 	}
@@ -80,7 +85,7 @@ public class BlankBackend {
 			String configurationPath) {
 		T a;
 		{
-			a = diFactory.create(applicationType,
+			a = diFactory.newInstance(applicationType,
 					Java.hashMap("diFactory", diFactory, "configurationFile",
 							configurationPath != null ? Path.of(configurationPath.startsWith("~")
 									? System.getProperty("user.home") + configurationPath.substring(1)
@@ -114,13 +119,11 @@ public class BlankBackend {
 		HttpServer s;
 		{
 			var p = Integer.parseInt(a.configuration.getProperty(a.configurationKey + ".server.port"));
-			s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
+			s = a.diFactory.newInstance(a.diFactory.classFor(HttpServer.class),
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
 		s.serve();
 	}
-
-	protected final HttpHandlerFactory handlerFactory;
 
 	protected final Properties configuration;
 
@@ -128,13 +131,19 @@ public class BlankBackend {
 
 	protected final String configurationKey;
 
+	protected final BlankConstants constants;
+
+	protected final Converter converter;
+
 	protected final Predicate<HttpExchange> drafts = this::testDrafts;
 
 	protected final DiFactory diFactory;
 
-	protected final Foo foo;
+	protected final CmsResourceHandling cmsResourceHandling;
 
 	protected final HttpHandler handler;
+
+	protected final HttpHandlerFactory handlerFactory;
 
 	protected final boolean includeType;
 
@@ -160,17 +169,19 @@ public class BlankBackend {
 		this.configurationFile = configurationFile;
 		this.configurationKey = configurationKey;
 		diFactory.context(this);
-		configuration = diFactory.create(diFactory.actualType(Properties.class),
+		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
+		constants = diFactory.newInstance(diFactory.classFor(BlankConstants.class));
 
 		{
 			Map<String, Class<?>> m = diFactory.types().stream()
 					.collect(Collectors.toMap(x -> x.getSimpleName(), x -> x, (_, x) -> x, LinkedHashMap::new));
 			resolvables = m.values().stream().toList();
 		}
-		typeResolver = diFactory.create(diFactory.actualType(DollarTypeResolver.class));
+		typeResolver = diFactory.newInstance(diFactory.classFor(DollarTypeResolver.class));
+		converter = diFactory.newInstance(diFactory.classFor(Converter.class));
 
-		storables = resolvables.stream().filter(x -> x.isAnnotationPresent(Store.class)).toList();
+		storables = resolvables.stream().filter(x -> JavaReflect.inheritedAnnotation(x, Store.class) != null).toList();
 		{
 			var x = configuration.getProperty(configurationKey + ".upload.directory");
 			if (x.startsWith("~"))
@@ -182,34 +193,33 @@ public class BlankBackend {
 				} catch (IOException e) {
 					throw new UncheckedIOException(e);
 				}
-			foo = diFactory.create(Foo.class, Map.of("directory", d));
+			cmsResourceHandling = diFactory.newInstance(CmsResourceHandling.class, Map.of("directory", d));
 		}
 		{
 			var f = configuration.getProperty(configurationKey + ".database.file");
 			if (f.startsWith("~"))
 				f = System.getProperty("user.home") + f.substring(1);
-			var b = diFactory.create(diFactory.actualType(PersistenceBuilder.class),
+			var b = diFactory.newInstance(diFactory.classFor(PersistenceBuilder.class),
 					Map.of("databaseFile", Path.of(f)));
 			persistence = b.build(diFactory);
 		}
 
 		includeType = true;
-		invocationResolver = diFactory.create(diFactory.actualType(InvocationResolver.class),
-				Map.of("invocables",
-						diFactory.types().stream()
-								.flatMap(x -> Arrays.stream(x.getMethods())
-										.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
-										.map(y -> new Invocable(x, y)))
-								.toList(),
-						"instanceResolver", (Function<Class<?>, Object>) x -> {
-							var y = diFactory.context();
-//							IO.println("x=" + x + ", y=" + y);
-							return x.isAssignableFrom(y.getClass()) ? diFactory.context()
-									: diFactory.create(diFactory.actualType(x),
-											Map.of("invocationResolver", InvocationResolver.INSTANCE.get()));
-						}));
-		renderableFactory = diFactory.create(diFactory.actualType(RenderableFactory.class));
-		handlerFactory = diFactory.create(diFactory.actualType(ApplicationHandlerFactory.class));
+		invocationResolver = diFactory.newInstance(diFactory.classFor(InvocationResolver.class), Map.of("invocables",
+				diFactory.types().stream().filter(x -> !(x.isInterface() || Modifier.isAbstract(x.getModifiers())))
+						.flatMap(x -> Arrays.stream(x.getMethods())
+								.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
+								.map(y -> new Invocable(x, y)))
+						.toList(),
+				"instanceResolver", (Function<Class<?>, Object>) x -> {
+					var y = diFactory.context();
+//					IO.println("x=" + x + ", y=" + y);
+					return x.isAssignableFrom(y.getClass()) ? diFactory.context()
+							: diFactory.newInstance(diFactory.classFor(x),
+									Map.of("invocationResolver", InvocationResolver.INSTANCE.get()));
+				}));
+		renderableFactory = diFactory.newInstance(diFactory.classFor(RenderableFactory.class));
+		handlerFactory = diFactory.newInstance(diFactory.classFor(ApplicationHandlerFactory.class));
 		handler = this::handle;
 	}
 
@@ -221,6 +231,14 @@ public class BlankBackend {
 		return configurationKey;
 	}
 
+	public BlankConstants constants() {
+		return constants;
+	}
+
+	public Converter converter() {
+		return converter;
+	}
+
 	public Predicate<HttpExchange> drafts() {
 		return drafts;
 	}
@@ -229,8 +247,8 @@ public class BlankBackend {
 		return diFactory;
 	}
 
-	public Foo foo() {
-		return foo;
+	public CmsResourceHandling cmsResourceHandling() {
+		return cmsResourceHandling;
 	}
 
 	public HttpHandler handler() {
@@ -267,10 +285,14 @@ public class BlankBackend {
 
 	@Handle(method = "GET", path = "/api/schema")
 	public Map<String, Map<String, Map<String, Object>>> schema() {
-		return Cms.schema(dataClass(), diFactory::actualType);
+		class A {
+			private static final Map<Class<?>, Map<String, Map<String, Map<String, Object>>>> RESULTS = new ConcurrentHashMap<>();
+		}
+		return A.RESULTS.computeIfAbsent(dataType(),
+				x -> diFactory.newInstance(diFactory.classFor(CmsSchema.class), Map.of("dataType", x)));
 	}
 
-	protected Class<?> dataClass() {
+	protected Class<?> dataType() {
 		return Data.class;
 	}
 

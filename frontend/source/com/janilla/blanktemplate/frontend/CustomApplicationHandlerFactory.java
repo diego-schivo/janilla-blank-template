@@ -47,6 +47,6 @@ public class CustomApplicationHandlerFactory extends ApplicationHandlerFactory {
 	}
 
 	protected DownloadHandlerFactory buildDownloadHandlerFactory() {
-		return Objects.requireNonNull(diFactory.create(diFactory.actualType(DownloadHandlerFactory.class)));
+		return Objects.requireNonNull(diFactory.newInstance(diFactory.classFor(DownloadHandlerFactory.class)));
 	}
 }

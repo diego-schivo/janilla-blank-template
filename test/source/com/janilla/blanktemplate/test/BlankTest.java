@@ -22,60 +22,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.blanktemplate.frontend;
+package com.janilla.blanktemplate.test;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
-import com.janilla.blanktemplate.Configuration;
-import com.janilla.frontend.AbstractIndexFactory;
-import com.janilla.frontend.IndexFactory;
-import com.janilla.frontend.cms.CmsDataFetching;
+import com.janilla.blanktemplate.fullstack.BlankFullstack;
 import com.janilla.http.HttpClient;
-import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DefaultDiFactory;
 import com.janilla.ioc.DiFactory;
-import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
-import com.janilla.java.TypeResolver;
 import com.janilla.web.ApplicationHandlerFactory;
+import com.janilla.web.Handle;
 import com.janilla.web.Invocable;
 import com.janilla.web.InvocationResolver;
 import com.janilla.web.NotFoundException;
+import com.janilla.web.Render;
 import com.janilla.web.RenderableFactory;
 import com.janilla.web.ResourceMap;
 
-public class BlankFrontend {
+@Render(template = "index.html")
+public class BlankTest {
 
-	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.blanktemplate",
-			"com.janilla.blanktemplate.frontend" };
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.blanktemplate.test" };
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
 		var f = new DefaultDiFactory(
 				Arrays.stream(DI_PACKAGES).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
-		serve(f, BlankFrontend.class, args.length > 0 ? args[0] : null);
+		serve(f, BlankTest.class, args.length > 0 ? args[0] : null);
 	}
 
-	protected static <T extends BlankFrontend> void serve(DiFactory diFactory, Class<T> applicationType,
+	protected static <T extends BlankTest> void serve(DiFactory diFactory, Class<T> applicationType,
 			String configurationPath) {
 		T a;
 		{
@@ -86,7 +82,29 @@ public class BlankFrontend {
 									: configurationPath) : null));
 		}
 
-		var c = sslContext(a.configuration(), a.configurationKey);
+		SSLContext c;
+		{
+			var p = a.configuration.getProperty(a.configurationKey + ".server.keystore.path");
+			if (p != null) {
+				var w = a.configuration.getProperty(a.configurationKey + ".server.keystore.password");
+				if (p.startsWith("~"))
+					p = System.getProperty("user.home") + p.substring(1);
+				var f = Path.of(p);
+				if (!Files.exists(f)) {
+					var cn = a.configuration.getProperty(a.configurationKey + ".server.keystore.common-name");
+					var san = a.configuration
+							.getProperty(a.configurationKey + ".server.keystore.subject-alternative-name");
+					Java.generateKeyPair(cn != null ? cn : "localhost", f, w,
+							san != null ? san : "dns:localhost,ip:127.0.0.1");
+				}
+				try (var s = Files.newInputStream(f)) {
+					c = Java.sslContext(s, w.toCharArray());
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			} else
+				c = HttpClient.sslContext("TLSv1.3");
+		}
 
 		HttpServer s;
 		{
@@ -97,60 +115,29 @@ public class BlankFrontend {
 		s.serve();
 	}
 
-	protected static <T extends BlankFrontend> SSLContext sslContext(Properties configuration,
-			String configurationKey) {
-		var p = configuration.getProperty(configurationKey + ".server.keystore.path");
-		if (p == null)
-			return HttpClient.sslContext("TLSv1.3");
-		var w = configuration.getProperty(configurationKey + ".server.keystore.password");
-		if (p.startsWith("~"))
-			p = System.getProperty("user.home") + p.substring(1);
-		var f = Path.of(p);
-		if (!Files.exists(f)) {
-			var cn = configuration.getProperty(configurationKey + ".server.keystore.common-name");
-			var san = configuration.getProperty(configurationKey + ".server.keystore.subject-alternative-name");
-			Java.generateKeyPair(cn != null ? cn : "localhost", f, w, san != null ? san : "dns:localhost,ip:127.0.0.1");
-		}
-		try (var s = Files.newInputStream(f)) {
-			return Java.sslContext(s, w.toCharArray());
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
-
-	protected final HttpHandlerFactory handlerFactory;
-
 	protected final Properties configuration;
 
 	protected final Path configurationFile;
 
 	protected final String configurationKey;
 
-	protected final CmsDataFetching dataFetching;
-
 	protected final DiFactory diFactory;
 
+	protected final BlankFullstack fullstack;
+
 	protected final HttpHandler handler;
-
-	protected final HttpClient httpClient;
-
-	protected final IndexFactory indexFactory;
 
 	protected final InvocationResolver invocationResolver;
 
 	protected final RenderableFactory renderableFactory;
 
-	protected final List<Class<?>> resolvables;
-
 	protected final ResourceMap resourceMap;
 
-	protected final TypeResolver typeResolver;
-
-	public BlankFrontend(DiFactory diFactory, Path configurationFile) {
+	public BlankTest(DiFactory diFactory, Path configurationFile) {
 		this(diFactory, configurationFile, "blank-template");
 	}
 
-	public BlankFrontend(DiFactory diFactory, Path configurationFile, String configurationKey) {
+	public BlankTest(DiFactory diFactory, Path configurationFile, String configurationKey) {
 		this.diFactory = diFactory;
 		this.configurationFile = configurationFile;
 		this.configurationKey = configurationKey;
@@ -158,23 +145,20 @@ public class BlankFrontend {
 		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
 
-		{
-			Map<String, Class<?>> m = diFactory.types().stream()
-					.collect(Collectors.toMap(x -> x.getSimpleName(), x -> x, (_, x) -> x, LinkedHashMap::new));
-//			IO.println("m=" + m);
-			resolvables = m.values().stream().toList();
-		}
-		typeResolver = diFactory.newInstance(diFactory.classFor(DollarTypeResolver.class));
+		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
+			try {
+				return Path.of(getClass().getResource("configuration.properties").toURI());
+			} catch (URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
+		});
 
-		httpClient = diFactory.newInstance(diFactory.classFor(HttpClient.class),
-				Map.of("sslContext", sslContext(configuration, configurationKey)));
 		{
-			var c = diFactory.classFor(CmsDataFetching.class);
-			dataFetching = c != null ? diFactory.newInstance(c) : null;
+			var f = new DefaultDiFactory(Arrays.stream(diFullstackPackages())
+					.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(), "fullstack");
+			fullstack = f.newInstance(f.classFor(BlankFullstack.class),
+					Java.hashMap("diFactory", f, "configurationFile", cf, "configurationKey", configurationKey));
 		}
-
-		resourceMap = diFactory.newInstance(diFactory.classFor(ResourceMap.class), Map.of("paths", resourcePaths()));
-		indexFactory = diFactory.newInstance(diFactory.classFor(AbstractIndexFactory.class));
 
 		invocationResolver = diFactory.newInstance(diFactory.classFor(InvocationResolver.class),
 				Map.of("invocables",
@@ -189,9 +173,27 @@ public class BlankFrontend {
 							return x.isAssignableFrom(y.getClass()) ? diFactory.context()
 									: diFactory.newInstance(diFactory.classFor(x));
 						}));
+		resourceMap = diFactory.newInstance(diFactory.classFor(ResourceMap.class), Map.of("paths", resourcePaths()));
 		renderableFactory = diFactory.newInstance(diFactory.classFor(RenderableFactory.class));
-		handlerFactory = diFactory.newInstance(diFactory.classFor(ApplicationHandlerFactory.class));
-		handler = this::handle;
+		{
+			var f = diFactory.newInstance(diFactory.classFor(ApplicationHandlerFactory.class));
+			HttpHandler h0 = ex -> {
+				var h = f.createHandler(Objects.requireNonNullElse(ex.exception(), ex.request()));
+				if (h == null)
+					throw new NotFoundException(ex.request().getMethod() + " " + ex.request().getTarget());
+				return h.handle(ex);
+			};
+			handler = ex -> {
+//				IO.println("BlankTest, " + ex.request().getPath() + ", Test.ongoing=" + Test.ONGOING.get());
+				var h = Test.ONGOING.get() && !ex.request().getPath().startsWith("/test/") ? fullstack.handler() : h0;
+				return h.handle(ex);
+			};
+		}
+	}
+
+	@Handle(method = "GET", path = "/")
+	public BlankTest application() {
+		return this;
 	}
 
 	public Properties configuration() {
@@ -202,24 +204,16 @@ public class BlankFrontend {
 		return configurationKey;
 	}
 
-	public CmsDataFetching dataFetching() {
-		return dataFetching;
-	}
-
 	public DiFactory diFactory() {
 		return diFactory;
 	}
 
+	public BlankFullstack fullstack() {
+		return fullstack;
+	}
+
 	public HttpHandler handler() {
 		return handler;
-	}
-
-	public HttpClient httpClient() {
-		return httpClient;
-	}
-
-	public IndexFactory indexFactory() {
-		return indexFactory;
 	}
 
 	public InvocationResolver invocationResolver() {
@@ -230,35 +224,16 @@ public class BlankFrontend {
 		return renderableFactory;
 	}
 
-	public List<Class<?>> resolvables() {
-		return resolvables;
-	}
-
 	public ResourceMap resourceMap() {
 		return resourceMap;
 	}
 
-	public TypeResolver typeResolver() {
-		return typeResolver;
-	}
-
-	protected boolean handle(HttpExchange exchange) {
-		return ScopedValue
-				.where(Configuration.PROPERTY_GETTER, x -> configuration.getProperty(configurationKey + "." + x))
-				.call(() -> {
-					var h = handlerFactory
-							.createHandler(exchange.exception() != null ? exchange.exception() : exchange.request());
-					if (h == null)
-						throw new NotFoundException(
-								exchange.request().getMethod() + " " + exchange.request().getTarget());
-					return h.handle(exchange);
-				});
+	protected String[] diFullstackPackages() {
+		return BlankFullstack.DI_PACKAGES;
 	}
 
 	protected Map<String, List<Path>> resourcePaths() {
-		var pp1 = Java.getPackagePaths("com.janilla.frontend", false).filter(Files::isRegularFile).toList();
-		var pp2 = Stream.of("com.janilla.frontend.cms", BlankFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList();
-		return Map.of("/base", pp1, "", pp2);
+		return Map.of("", Stream.of("com.janilla.frontend", "com.janilla.blanktemplate.test")
+				.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList());
 	}
 }

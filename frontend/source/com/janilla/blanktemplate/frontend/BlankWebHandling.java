@@ -24,27 +24,25 @@
  */
 package com.janilla.blanktemplate.frontend;
 
+import com.janilla.frontend.IndexFactory;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Handle;
 
 public class BlankWebHandling {
 
-	protected final BlankDataFetching dataFetching;
+	protected final IndexFactory indexFactory;
 
-	protected final BlankIndexFactory indexFactory;
-
-	public BlankWebHandling(BlankDataFetching dataFetching, BlankIndexFactory indexFactory) {
-		this.dataFetching = dataFetching;
+	public BlankWebHandling(IndexFactory indexFactory) {
 		this.indexFactory = indexFactory;
 	}
 
 	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
 	public Object admin(String path, HttpExchange exchange) {
-		return indexFactory.index(exchange);
+		return indexFactory.newIndex(exchange);
 	}
 
 	@Handle(method = "GET", path = "/")
 	public Object page(HttpExchange exchange) {
-		return indexFactory.index(exchange);
+		return indexFactory.newIndex(exchange);
 	}
 }
