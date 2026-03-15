@@ -47,7 +47,7 @@ import com.janilla.backend.cms.CmsResourceHandling;
 import com.janilla.backend.cms.CmsSchema;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.backend.persistence.PersistenceBuilder;
-import com.janilla.blanktemplate.BlankConstants;
+import com.janilla.blanktemplate.BlankDomain;
 import com.janilla.blanktemplate.Configuration;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpExchange;
@@ -131,7 +131,7 @@ public class BlankBackend {
 
 	protected final String configurationKey;
 
-	protected final BlankConstants constants;
+	protected final BlankDomain domain;
 
 	protected final Converter converter;
 
@@ -171,10 +171,10 @@ public class BlankBackend {
 		diFactory.context(this);
 		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
-		constants = diFactory.newInstance(diFactory.classFor(BlankConstants.class));
+		domain = diFactory.newInstance(diFactory.classFor(BlankDomain.class));
 
 		{
-			Map<String, Class<?>> m = diFactory.types().stream()
+			Map<String, Class<?>> m = diFactory.types().stream().filter(x -> !x.isAnonymousClass() && !x.isLocalClass())
 					.collect(Collectors.toMap(x -> x.getSimpleName(), x -> x, (_, x) -> x, LinkedHashMap::new));
 			resolvables = m.values().stream().toList();
 		}
@@ -231,12 +231,12 @@ public class BlankBackend {
 		return configurationKey;
 	}
 
-	public BlankConstants constants() {
-		return constants;
-	}
-
 	public Converter converter() {
 		return converter;
+	}
+
+	public BlankDomain domain() {
+		return domain;
 	}
 
 	public Predicate<HttpExchange> drafts() {

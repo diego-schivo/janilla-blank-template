@@ -31,7 +31,7 @@ import java.util.function.Predicate;
 import com.janilla.backend.cms.AbstractUserApi;
 import com.janilla.backend.cms.UserHttpExchange;
 import com.janilla.backend.persistence.Persistence;
-import com.janilla.blanktemplate.BlankConstants;
+import com.janilla.blanktemplate.BlankDomain;
 import com.janilla.cms.User;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Handle;
@@ -39,19 +39,19 @@ import com.janilla.web.Handle;
 @Handle(path = "/api/users")
 public class UserApi extends AbstractUserApi<Long, User<Long>> {
 
-	protected final BlankConstants constants;
+	protected final BlankDomain domain;
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public UserApi(Predicate<HttpExchange> drafts, Persistence persistence, Properties configuration,
-			String configurationKey, BlankConstants constants) {
+			String configurationKey, BlankDomain domain) {
 		super((Class) User.class, drafts, persistence, "title",
 				configuration.getProperty(configurationKey + ".jwt.key"));
-		this.constants = constants;
+		this.domain = domain;
 	}
 
 	@Override
 	public User<Long> firstRegister(CreateData<User<Long>> data, UserHttpExchange<User<Long>> exchange) {
-		var u = data.user().withRoles(Set.of(constants.adminRole()));
+		var u = data.user().withRoles(Set.of(domain.userRole("ADMIN")));
 		return super.firstRegister(data.withUser(u), exchange);
 	}
 }

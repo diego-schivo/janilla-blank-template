@@ -30,18 +30,20 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
+import com.janilla.blanktemplate.BlankDomain;
 import com.janilla.blanktemplate.Configuration;
 import com.janilla.frontend.AbstractIndexFactory;
 import com.janilla.frontend.IndexFactory;
@@ -53,6 +55,7 @@ import com.janilla.http.HttpHandlerFactory;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DefaultDiFactory;
 import com.janilla.ioc.DiFactory;
+import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
 import com.janilla.java.TypeResolver;
@@ -126,6 +129,10 @@ public class BlankFrontend {
 
 	protected final String configurationKey;
 
+	protected final BlankDomain domain;
+
+	protected final Converter converter;
+
 	protected final CmsDataFetching dataFetching;
 
 	protected final DiFactory diFactory;
@@ -142,6 +149,8 @@ public class BlankFrontend {
 
 	protected final List<Class<?>> resolvables;
 
+	protected final Map<String, String> resourcePrefixes = new LinkedHashMap<>();
+
 	protected final ResourceMap resourceMap;
 
 	protected final TypeResolver typeResolver;
@@ -157,6 +166,7 @@ public class BlankFrontend {
 		diFactory.context(this);
 		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
+		domain = diFactory.newInstance(diFactory.classFor(BlankDomain.class));
 
 		{
 			Map<String, Class<?>> m = diFactory.types().stream()
@@ -165,6 +175,7 @@ public class BlankFrontend {
 			resolvables = m.values().stream().toList();
 		}
 		typeResolver = diFactory.newInstance(diFactory.classFor(DollarTypeResolver.class));
+		converter = diFactory.newInstance(diFactory.classFor(Converter.class));
 
 		httpClient = diFactory.newInstance(diFactory.classFor(HttpClient.class),
 				Map.of("sslContext", sslContext(configuration, configurationKey)));
@@ -173,6 +184,7 @@ public class BlankFrontend {
 			dataFetching = c != null ? diFactory.newInstance(c) : null;
 		}
 
+		putResourcePrefixes();
 		resourceMap = diFactory.newInstance(diFactory.classFor(ResourceMap.class), Map.of("paths", resourcePaths()));
 		indexFactory = diFactory.newInstance(diFactory.classFor(AbstractIndexFactory.class));
 
@@ -200,6 +212,14 @@ public class BlankFrontend {
 
 	public String configurationKey() {
 		return configurationKey;
+	}
+
+	public BlankDomain domain() {
+		return domain;
+	}
+
+	public Converter converter() {
+		return converter;
 	}
 
 	public CmsDataFetching dataFetching() {
@@ -238,6 +258,10 @@ public class BlankFrontend {
 		return resourceMap;
 	}
 
+	public Map<String, String> resourcePrefixes() {
+		return resourcePrefixes;
+	}
+
 	public TypeResolver typeResolver() {
 		return typeResolver;
 	}
@@ -256,9 +280,20 @@ public class BlankFrontend {
 	}
 
 	protected Map<String, List<Path>> resourcePaths() {
-		var pp1 = Java.getPackagePaths("com.janilla.frontend", false).filter(Files::isRegularFile).toList();
-		var pp2 = Stream.of("com.janilla.frontend.cms", BlankFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList();
-		return Map.of("/base", pp1, "", pp2);
+//		var pp1 = Java.getPackagePaths("com.janilla.frontend", false).filter(Files::isRegularFile).toList();
+//		var pp2 = Stream.of("com.janilla.frontend.cms", BlankFrontend.class.getPackageName())
+//				.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList();
+//		return Map.of("/base", pp1, "", pp2);
+		return resourcePrefixes().entrySet().stream().reduce(new HashMap<>(), (x, y) -> {
+			x.computeIfAbsent(y.getValue(), _ -> new ArrayList<>())
+					.addAll(Java.getPackagePaths(y.getKey(), false).filter(Files::isRegularFile).toList());
+			return x;
+		}, (_, x) -> x);
+	}
+
+	protected void putResourcePrefixes() {
+		resourcePrefixes.put("com.janilla.frontend", "/base");
+		resourcePrefixes.put("com.janilla.frontend.cms", "");
+		resourcePrefixes.put("com.janilla.blanktemplate.frontend", "");
 	}
 }

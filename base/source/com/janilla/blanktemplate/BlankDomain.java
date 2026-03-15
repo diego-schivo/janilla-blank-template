@@ -22,11 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-//package com.janilla.blanktemplate;
-//
-//import com.janilla.cms.UserRole;
-//
-//public interface Constants {
-//
-//	UserRole adminRole();
-//}
+package com.janilla.blanktemplate;
+
+import com.janilla.cms.UserRole;
+
+public class BlankDomain {
+
+	public UserRole userRole(String name) {
+		return UserRoleImpl.valueOf(name);
+	}
+}
