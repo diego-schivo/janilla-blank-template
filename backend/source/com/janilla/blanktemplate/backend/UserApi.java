@@ -50,7 +50,7 @@ public class UserApi extends AbstractUserApi<Long, User<Long>> {
 	}
 
 	@Override
-	public User<Long> firstRegister(CreateData<User<Long>> data, UserHttpExchange<User<Long>> exchange) {
+	public User<Long> firstRegister(UserData<User<Long>> data, UserHttpExchange<User<Long>> exchange) {
 		var u = data.user().withRoles(Set.of(domain.userRole("ADMIN")));
 		return super.firstRegister(data.withUser(u), exchange);
 	}

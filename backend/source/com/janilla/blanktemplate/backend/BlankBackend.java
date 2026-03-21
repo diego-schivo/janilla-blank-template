@@ -59,7 +59,6 @@ import com.janilla.ioc.DiFactory;
 import com.janilla.java.Converter;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
-import com.janilla.java.JavaReflect;
 import com.janilla.java.TypeResolver;
 import com.janilla.persistence.Store;
 import com.janilla.web.ApplicationHandlerFactory;
@@ -71,7 +70,7 @@ import com.janilla.web.RenderableFactory;
 
 public class BlankBackend {
 
-	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.backend.cms",
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.cms", "com.janilla.backend.cms",
 			"com.janilla.blanktemplate", "com.janilla.blanktemplate.backend" };
 
 	public static void main(String[] args) {
@@ -181,7 +180,7 @@ public class BlankBackend {
 		typeResolver = diFactory.newInstance(diFactory.classFor(DollarTypeResolver.class));
 		converter = diFactory.newInstance(diFactory.classFor(Converter.class));
 
-		storables = resolvables.stream().filter(x -> JavaReflect.inheritedAnnotation(x, Store.class) != null).toList();
+		storables = resolvables.stream().filter(x -> x.isAnnotationPresent(Store.class)).toList();
 		{
 			var x = configuration.getProperty(configurationKey + ".upload.directory");
 			if (x.startsWith("~"))
@@ -284,9 +283,9 @@ public class BlankBackend {
 	}
 
 	@Handle(method = "GET", path = "/api/schema")
-	public Map<String, Map<String, Map<String, Object>>> schema() {
+	public Map<String, Object> schema() {
 		class A {
-			private static final Map<Class<?>, Map<String, Map<String, Map<String, Object>>>> RESULTS = new ConcurrentHashMap<>();
+			private static final Map<Class<?>, Map<String, Object>> RESULTS = new ConcurrentHashMap<>();
 		}
 		return A.RESULTS.computeIfAbsent(dataType(),
 				x -> diFactory.newInstance(diFactory.classFor(CmsSchema.class), Map.of("dataType", x)));

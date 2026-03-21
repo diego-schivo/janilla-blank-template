@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import com.janilla.ioc.DiFactory;
+import com.janilla.java.AnnotationAndElement;
 import com.janilla.web.Render;
 import com.janilla.web.RenderableFactory;
 import com.janilla.web.ResourceMap;
@@ -18,8 +19,12 @@ public class BlankRenderableFactory extends RenderableFactory {
 	}
 
 	@Override
-	protected Stream<String> resourceKeys(Render a, Object value) {
-		return super.resourceKeys(a, value)
-				.map(x -> x.startsWith("/") ? x : resourcePrefixes.get(value.getClass().getPackageName()) + "/" + x);
+	protected Stream<String> resourceKeys(AnnotationAndElement<Render> render) {
+		return super.resourceKeys(render).map(x -> {
+			var y = x.startsWith("/") ? x
+					: resourcePrefixes.get(((Class<?>) render.annotated()).getPackageName()) + "/" + x;
+//			IO.println("BlankRenderableFactory.resourceKeys, x=" + x + ", y=" + y);
+			return y;
+		});
 	}
 }

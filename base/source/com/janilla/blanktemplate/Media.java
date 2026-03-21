@@ -24,30 +24,17 @@
  */
 package com.janilla.blanktemplate;
 
-import java.time.Instant;
-
 import com.janilla.cms.Document;
-import com.janilla.cms.DocumentStatus;
 import com.janilla.persistence.Store;
 
 @Store
 public interface Media extends Document<Long> {
-
-	Long id();
 
 	File file();
 
 	String alt();
 
 	String caption();
-
-	Instant createdAt();
-
-	Instant updatedAt();
-
-	DocumentStatus documentStatus();
-
-	Instant publishedAt();
 
 	default String uri() {
 		var f = file();
