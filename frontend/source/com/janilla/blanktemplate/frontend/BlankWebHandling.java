@@ -24,6 +24,7 @@
  */
 package com.janilla.blanktemplate.frontend;
 
+import com.janilla.frontend.Index;
 import com.janilla.frontend.IndexFactory;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Handle;
@@ -37,12 +38,12 @@ public class BlankWebHandling {
 	}
 
 	@Handle(method = "GET", path = "/admin(/[\\w\\d/-]*)?")
-	public Object admin(String path, HttpExchange exchange) {
+	public Index admin(String path, HttpExchange exchange) {
 		return indexFactory.newIndex(exchange);
 	}
 
 	@Handle(method = "GET", path = "/")
-	public Object page(HttpExchange exchange) {
+	public Index home(HttpExchange exchange) {
 		return indexFactory.newIndex(exchange);
 	}
 }

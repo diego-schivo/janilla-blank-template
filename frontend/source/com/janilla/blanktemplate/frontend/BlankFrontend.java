@@ -45,7 +45,6 @@ import javax.net.ssl.SSLContext;
 
 import com.janilla.blanktemplate.BlankDomain;
 import com.janilla.blanktemplate.Configuration;
-import com.janilla.frontend.AbstractIndexFactory;
 import com.janilla.frontend.IndexFactory;
 import com.janilla.frontend.cms.CmsDataFetching;
 import com.janilla.http.HttpClient;
@@ -186,7 +185,7 @@ public class BlankFrontend {
 
 		putResourcePrefixes();
 		resourceMap = diFactory.newInstance(diFactory.classFor(ResourceMap.class), Map.of("paths", resourcePaths()));
-		indexFactory = diFactory.newInstance(diFactory.classFor(AbstractIndexFactory.class));
+		indexFactory = diFactory.newInstance(diFactory.classFor(IndexFactory.class));
 
 		invocationResolver = diFactory.newInstance(diFactory.classFor(InvocationResolver.class),
 				Map.of("invocables",
